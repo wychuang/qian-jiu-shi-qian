@@ -275,6 +275,9 @@ h1 {
     linear-gradient(90deg, rgba(201, 53, 36, 0.08), transparent 42%, transparent 58%, rgba(17, 107, 79, 0.1)),
     repeating-linear-gradient(0deg, rgba(23, 23, 19, 0.045) 0 1px, transparent 1px 38px),
     #fffdf8;
+  cursor: ns-resize;
+  touch-action: none;
+  user-select: none;
 }
 
 .rail-legend {
@@ -302,10 +305,11 @@ h1 {
 
 .rail-line {
   position: absolute;
+  z-index: 2;
   top: 60px;
   bottom: 34px;
   left: 50%;
-  width: 18px;
+  width: 22px;
   border: 2px solid var(--ink);
   border-radius: 999px;
   background:
@@ -320,8 +324,8 @@ h1 {
   position: absolute;
   left: 50%;
   top: var(--amount-y);
-  width: 38px;
-  height: 38px;
+  width: 46px;
+  height: 46px;
   border: 3px solid var(--ink);
   border-radius: 50%;
   background: var(--surface);
@@ -341,6 +345,10 @@ h1 {
   transform: translate(-50%, -50%);
 }
 
+.amount-rail:active .rail-line::after {
+  transform: translate(-50%, -50%) scale(1.06);
+}
+
 .vertical-slider {
   position: absolute;
   z-index: 8;
@@ -349,13 +357,16 @@ h1 {
   left: calc(50% - 42px);
   width: 84px;
   opacity: 0;
+  pointer-events: none;
   writing-mode: vertical-lr;
   direction: rtl;
 }
 
 .rail-marks {
   position: absolute;
+  z-index: 4;
   inset: 0 0 0 0;
+  pointer-events: none;
 }
 
 .rail-mark,
@@ -363,13 +374,14 @@ h1 {
   position: absolute;
   top: var(--y);
   border: 0;
+  pointer-events: auto;
   transform: translateY(-50%);
 }
 
 .rail-mark {
-  left: calc(50% + 24px);
+  left: calc(50% + 18px);
   min-height: 28px;
-  padding: 0 8px;
+  padding: 0 6px 0 8px;
   border-left: 2px solid rgba(23, 23, 19, 0.25);
   color: #32352f;
   background: transparent;
@@ -377,13 +389,27 @@ h1 {
   font-weight: 800;
 }
 
+.rail-mark::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: -28px;
+  width: 22px;
+  height: 2px;
+  background: rgba(23, 23, 19, 0.42);
+  transform: translateY(-50%);
+}
+
 .rail-mark[data-active="true"] {
-  color: var(--danger);
+  border-left-color: var(--ink);
+  border-radius: 999px;
+  color: #fff;
+  background: var(--ink);
 }
 
 .rail-pin {
-  left: calc(50% + 42px);
-  width: min(190px, calc(50% - 58px));
+  left: calc(50% + 88px);
+  width: min(190px, calc(50% - 104px));
   min-height: 30px;
   padding: 5px 9px;
   border: 1px solid rgba(23, 23, 19, 0.24);
@@ -400,7 +426,7 @@ h1 {
 
 .rail-pin[data-lens="attention"] {
   left: auto;
-  right: calc(50% + 42px);
+  right: calc(50% + 88px);
   color: #fff;
   background: var(--danger);
   text-align: right;
@@ -731,8 +757,8 @@ blockquote {
   }
 
   .rail-pin {
-    left: calc(50% + 30px);
-    width: min(132px, calc(50% - 42px));
+    left: calc(50% + 78px);
+    width: min(132px, calc(50% - 88px));
     font-size: 0.68rem;
   }
 
@@ -742,7 +768,7 @@ blockquote {
   }
 
   .rail-pin[data-lens="attention"] {
-    right: calc(50% + 30px);
+    right: calc(50% + 78px);
   }
 
   .rail-line::before {

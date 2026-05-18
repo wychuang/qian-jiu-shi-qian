@@ -7,6 +7,7 @@ import {
   getProfiles,
   priceToPercent
 } from "./catalog.mjs";
+import { clientYToRailPercent } from "./interaction.mjs";
 
 const state = {
   region: "cn",
@@ -16,6 +17,10 @@ const state = {
   selectedId: "cn-genshin-648",
   query: ""
 };
+
+let isMouseDraggingRail = false;
+let isPointerDraggingRail = false;
+let suppressNextRailClick = false;
 
 const elements = {
   app: document.querySelector("#app"),
@@ -61,9 +66,74 @@ function init() {
   });
 
   elements.verticalSlider.addEventListener("input", () => {
-    state.amountPercent = Number(elements.verticalSlider.value);
-    state.selectedId = "";
-    render();
+    setAmountPercent(Number(elements.verticalSlider.value));
+  });
+
+  elements.rail.addEventListener("pointerdown", (event) => {
+    if (event.target.closest("button")) return;
+    event.preventDefault();
+    isPointerDraggingRail = true;
+    suppressNextRailClick = true;
+    elements.rail.setPointerCapture(event.pointerId);
+    updateAmountFromPointer(event);
+  });
+
+  elements.rail.addEventListener("pointermove", (event) => {
+    if (!elements.rail.hasPointerCapture(event.pointerId)) return;
+    event.preventDefault();
+    updateAmountFromPointer(event);
+  });
+
+  elements.rail.addEventListener("pointerup", (event) => {
+    isPointerDraggingRail = false;
+    event.preventDefault();
+    if (elements.rail.hasPointerCapture(event.pointerId)) {
+      elements.rail.releasePointerCapture(event.pointerId);
+    }
+    window.setTimeout(() => {
+      suppressNextRailClick = false;
+    }, 0);
+  });
+
+  elements.rail.addEventListener("pointercancel", (event) => {
+    isPointerDraggingRail = false;
+    if (elements.rail.hasPointerCapture(event.pointerId)) {
+      elements.rail.releasePointerCapture(event.pointerId);
+    }
+    suppressNextRailClick = false;
+  });
+
+  // Dragging rerenders rail marks under the pointer; ignore the synthetic release click.
+  elements.rail.addEventListener("click", (event) => {
+    if (!suppressNextRailClick) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    suppressNextRailClick = false;
+  }, true);
+
+  elements.rail.addEventListener("lostpointercapture", () => {
+    isPointerDraggingRail = false;
+  });
+
+  elements.rail.addEventListener("mousedown", (event) => {
+    startMouseRailDrag(event);
+  });
+
+  document.addEventListener("mousedown", (event) => {
+    if (!event.target.closest("#amount-rail")) return;
+    startMouseRailDrag(event);
+  }, true);
+
+  window.addEventListener("mousemove", (event) => {
+    if (!isMouseDraggingRail || isPointerDraggingRail) return;
+    updateAmountFromPointer(event);
+  });
+
+  window.addEventListener("mouseup", () => {
+    isMouseDraggingRail = false;
+    window.setTimeout(() => {
+      suppressNextRailClick = false;
+    }, 0);
   });
 
   elements.query.addEventListener("input", () => {
@@ -71,6 +141,25 @@ function init() {
     render();
   });
 
+  render();
+}
+
+function updateAmountFromPointer(event) {
+  const line = elements.rail.querySelector(".rail-line");
+  setAmountPercent(clientYToRailPercent(event.clientY, line.getBoundingClientRect()));
+}
+
+function startMouseRailDrag(event) {
+  if (isPointerDraggingRail || event.target.closest("button")) return;
+  event.preventDefault();
+  isMouseDraggingRail = true;
+  suppressNextRailClick = true;
+  updateAmountFromPointer(event);
+}
+
+function setAmountPercent(percent) {
+  state.amountPercent = percent;
+  state.selectedId = "";
   render();
 }
 
@@ -144,7 +233,8 @@ function renderRail(items, bounds, amount) {
     button.style.setProperty("--y", `${100 - priceToPercent(value, bounds.min, bounds.max)}%`);
     button.dataset.active = String(Math.abs(Math.log(value / amount)) < 0.08);
     button.innerHTML = `<span>${formatMoney(state.region, value)}</span>`;
-    button.addEventListener("click", () => {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
       state.amountPercent = priceToPercent(value, bounds.min, bounds.max);
       const exact = items.find((item) => Math.abs(item.price - value) < 0.01);
       state.selectedId = exact?.id ?? "";
@@ -163,7 +253,8 @@ function renderRail(items, bounds, amount) {
       button.style.setProperty("--y", `${100 - priceToPercent(item.price, bounds.min, bounds.max)}%`);
       button.title = `${formatMoney(item)} · ${item.title}`;
       button.textContent = item.brand || item.title.slice(0, 5);
-      button.addEventListener("click", () => {
+      button.addEventListener("click", (event) => {
+        event.stopPropagation();
         state.selectedId = item.id;
         state.amountPercent = priceToPercent(item.price, bounds.min, bounds.max);
         render();

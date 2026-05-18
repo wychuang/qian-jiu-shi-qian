@@ -6,6 +6,7 @@ Set-Location $projectRoot
 
 Write-Host "Checking JavaScript syntax..."
 node --check src/catalog.mjs
+node --check src/interaction.mjs
 node --check src/app.mjs
 node --check scripts/dev-server.mjs
 
