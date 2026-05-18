@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>钱就是钱</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <main id="app" class="app" data-region="cn">
+      <header class="topbar">
+        <div class="identity">
+          <p class="eyebrow">Money Is Money</p>
+          <h1>钱就是钱</h1>
+          <p>把一杯咖啡、一段路、一个会员、一件家电和一段自由放回同一把尺子上。</p>
+        </div>
+
+        <div class="controls" aria-label="视图控制">
+          <div class="segmented" aria-label="地区">
+            <button type="button" data-region="cn" aria-pressed="true">中国</button>
+            <button type="button" data-region="us" aria-pressed="false">US</button>
+          </div>
+          <label class="search">
+            <span>搜索</span>
+            <input id="query" type="search" autocomplete="off" placeholder="咖啡 / 关系 / buffer">
+          </label>
+          <button id="reset" class="ghost-button" type="button">重置</button>
+        </div>
+      </header>
+
+      <section class="lens">
+        <div class="budget-panel">
+          <div>
+            <p>预算</p>
+            <strong id="budget-label">¥150,000</strong>
+          </div>
+          <input id="budget" type="range" min="0" max="100" step="1" value="100" aria-label="预算">
+          <div class="count"><span id="count">0</span> 项</div>
+        </div>
+        <div id="category-bar" class="category-bar" aria-label="分类"></div>
+      </section>
+
+      <section class="map-shell" aria-label="价格地图">
+        <div id="money-map" class="money-map"></div>
+      </section>
+
+      <section class="equivalence-shell">
+        <aside id="equivalence" class="equivalence" aria-label="同价选择"></aside>
+      </section>
+
+      <section id="item-list" class="item-list" aria-label="购买项目"></section>
+    </main>
+
+    <script type="module" src="./src/app.mjs"></script>
+  </body>
+</html>

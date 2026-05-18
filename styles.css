@@ -1,0 +1,619 @@
+:root {
+  color-scheme: light;
+  --ink: #171715;
+  --muted: #666b63;
+  --paper: #f7f8f3;
+  --surface: #ffffff;
+  --line: #d8ddd2;
+  --blue: #1459c8;
+  --red: #d5402b;
+  --green: #0f7d4d;
+  --yellow: #e8b923;
+  --violet: #6b49b8;
+  --cyan: #087c8f;
+  --shadow: 0 18px 55px rgba(23, 23, 21, 0.13);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  overflow-x: hidden;
+  color: var(--ink);
+  font-family: Aptos, "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  background:
+    linear-gradient(90deg, rgba(20, 89, 200, 0.07) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(213, 64, 43, 0.05) 1px, transparent 1px),
+    var(--paper);
+  background-size: 42px 42px;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.app {
+  width: min(1440px, 100%);
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.topbar {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) minmax(320px, 560px);
+  gap: 28px;
+  align-items: end;
+  padding: 18px 0 22px;
+}
+
+.identity {
+  max-width: 780px;
+  min-width: 0;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--red);
+  font-family: "Iowan Old Style", "Noto Serif SC", "Songti SC", serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0;
+  font-family: "Iowan Old Style", "Noto Serif SC", "Songti SC", serif;
+  font-size: 4.5rem;
+  line-height: 0.95;
+  font-weight: 900;
+}
+
+.identity p:last-child {
+  max-width: 760px;
+  margin: 18px 0 0;
+  color: #383c37;
+  font-size: 1.12rem;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.segmented {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.segmented button,
+.ghost-button,
+.chip {
+  min-height: 38px;
+  border: 0;
+  border-radius: 6px;
+  color: var(--ink);
+  background: transparent;
+}
+
+.segmented button[aria-pressed="true"] {
+  color: #fff;
+  background: var(--ink);
+}
+
+.search {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.search span {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.search input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ink);
+}
+
+.ghost-button {
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.lens {
+  display: grid;
+  grid-template-columns: minmax(300px, 460px) 1fr;
+  gap: 18px;
+  align-items: stretch;
+  padding: 18px 0;
+}
+
+.budget-panel {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 14px;
+  align-items: center;
+  min-height: 84px;
+  padding: 16px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.budget-panel p,
+.count {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.budget-panel strong {
+  display: block;
+  min-width: 86px;
+  margin-top: 5px;
+  font-family: "Iowan Old Style", "Noto Serif SC", serif;
+  font-size: 1.55rem;
+  line-height: 1;
+}
+
+.budget-panel input {
+  width: 100%;
+  accent-color: var(--red);
+}
+
+.count {
+  min-width: 50px;
+  text-align: right;
+}
+
+.count span {
+  display: block;
+  color: var(--ink);
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.category-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-content: center;
+}
+
+.chip {
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.chip[aria-pressed="true"] {
+  color: #fff;
+  background: var(--blue);
+  border-color: var(--blue);
+}
+
+.map-shell {
+  position: relative;
+  margin: 14px 0 20px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.84)),
+    repeating-linear-gradient(120deg, rgba(20, 89, 200, 0.09) 0 1px, transparent 1px 11px);
+  box-shadow: var(--shadow);
+}
+
+.money-map {
+  position: relative;
+  min-height: 390px;
+  padding: 44px 18px 56px;
+}
+
+.axis {
+  position: absolute;
+  inset: 16px 18px auto;
+  height: 28px;
+}
+
+.tick {
+  position: absolute;
+  left: var(--x);
+  top: 0;
+  transform: translateX(-50%);
+  color: var(--muted);
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.tick::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 21px;
+  width: 1px;
+  height: 322px;
+  background: rgba(23, 23, 21, 0.14);
+}
+
+.tick:first-child {
+  transform: translateX(0);
+}
+
+.tick:last-child {
+  transform: translateX(-100%);
+}
+
+.lanes {
+  position: relative;
+  height: 286px;
+  margin-top: 30px;
+  border-top: 3px solid var(--ink);
+  border-bottom: 3px solid var(--ink);
+}
+
+.lanes::before {
+  content: "";
+  position: absolute;
+  inset: 50% 0 auto;
+  height: 2px;
+  background: var(--red);
+}
+
+.budget-curtain {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: var(--budget-x);
+  background: repeating-linear-gradient(135deg, rgba(23, 23, 21, 0.08) 0 8px, rgba(23, 23, 21, 0.02) 8px 16px);
+  border-left: 2px solid var(--red);
+  pointer-events: none;
+}
+
+.pin {
+  --pin-color: var(--blue);
+  position: absolute;
+  left: clamp(58px, var(--x), calc(100% - 58px));
+  top: calc((100% / var(--lane-count)) * var(--lane) + 10px + var(--drift) * 5px);
+  max-width: 112px;
+  min-height: 28px;
+  padding: 4px 8px;
+  border: 1px solid rgba(23, 23, 21, 0.35);
+  border-radius: 6px;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--pin-color) 17%, white);
+  box-shadow: 3px 3px 0 rgba(23, 23, 21, 0.16);
+  transform: translateX(-50%);
+  transition: transform 160ms ease, opacity 160ms ease, background 160ms ease;
+  z-index: 2;
+}
+
+.pin span {
+  display: block;
+  overflow: hidden;
+  font-size: 0.74rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pin:hover,
+.pin[data-active="true"] {
+  transform: translateX(-50%) translateY(-3px);
+  color: #fff;
+  background: var(--pin-color);
+  z-index: 5;
+}
+
+.pin[data-muted="true"] {
+  opacity: 0.2;
+}
+
+[data-category="body"] { --pin-color: var(--green); }
+[data-category="care"] { --pin-color: var(--violet); }
+[data-category="digital"] { --pin-color: var(--blue); }
+[data-category="durable"] { --pin-color: #5f4c39; }
+[data-category="experience"] { --pin-color: var(--red); }
+[data-category="food"] { --pin-color: #c46f12; }
+[data-category="future"] { --pin-color: #222; }
+[data-category="home"] { --pin-color: var(--cyan); }
+[data-category="mind"] { --pin-color: #8052c7; }
+[data-category="mobility"] { --pin-color: #2e7dba; }
+[data-category="relationship"] { --pin-color: #c72567; }
+[data-category="time"] { --pin-color: var(--yellow); }
+
+.band-labels {
+  position: absolute;
+  right: 18px;
+  bottom: 14px;
+  left: 18px;
+  height: 28px;
+}
+
+.band-labels span {
+  position: absolute;
+  left: var(--x);
+  width: var(--w);
+  min-width: 42px;
+  padding-top: 8px;
+  border-top: 2px solid rgba(23, 23, 21, 0.25);
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.equivalence-shell {
+  margin: 0 0 24px;
+}
+
+.equivalence {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.72fr) 1fr;
+  gap: 14px;
+}
+
+.equivalence-head,
+.equivalence-item,
+.purchase-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.equivalence-head {
+  padding: 18px;
+  border-color: var(--ink);
+}
+
+.equivalence-head p {
+  margin: 0 0 10px;
+  color: var(--red);
+  font-weight: 800;
+}
+
+.equivalence-head strong {
+  display: block;
+  font-family: "Iowan Old Style", "Noto Serif SC", serif;
+  font-size: 1.55rem;
+  line-height: 1.18;
+}
+
+.equivalence-head span {
+  display: block;
+  margin-top: 12px;
+  color: #3b403a;
+  line-height: 1.6;
+}
+
+.equivalence-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.equivalence-item {
+  min-height: 148px;
+  padding: 14px;
+  border-top: 6px solid var(--pin-color);
+}
+
+.equivalence-item small {
+  display: block;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.equivalence-item strong {
+  display: block;
+  margin: 10px 0;
+  font-size: 1rem;
+}
+
+.equivalence-item span {
+  color: #3b403a;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.item-list {
+  display: grid;
+  gap: 24px;
+  padding-bottom: 48px;
+}
+
+.band-section {
+  display: grid;
+  grid-template-columns: 128px 1fr;
+  gap: 18px;
+  align-items: start;
+}
+
+.band-section h2 {
+  position: sticky;
+  top: 14px;
+  margin: 0;
+  padding: 9px 0;
+  border-top: 3px solid var(--ink);
+  color: var(--ink);
+  font-family: "Iowan Old Style", "Noto Serif SC", serif;
+  font-size: 1.55rem;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.purchase-card {
+  overflow: hidden;
+  border-top: 6px solid var(--pin-color);
+}
+
+.purchase-card summary {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 8px 10px;
+  align-items: start;
+  min-height: 142px;
+  padding: 14px;
+  list-style: none;
+  cursor: pointer;
+}
+
+.purchase-card summary::-webkit-details-marker {
+  display: none;
+}
+
+.card-price {
+  grid-column: 1 / 2;
+  color: var(--red);
+  font-family: "Iowan Old Style", "Noto Serif SC", serif;
+  font-size: 1.25rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.card-title {
+  grid-column: 2 / 3;
+  font-weight: 900;
+}
+
+.card-category {
+  justify-self: end;
+  padding: 3px 7px;
+  border: 1px solid color-mix(in srgb, var(--pin-color) 55%, var(--line));
+  border-radius: 5px;
+  color: var(--pin-color);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.card-meaning {
+  grid-column: 1 / -1;
+  color: #3b403a;
+  line-height: 1.58;
+}
+
+.card-body {
+  display: grid;
+  gap: 10px;
+  padding: 0 14px 16px;
+  color: #30352f;
+  line-height: 1.65;
+}
+
+.card-body p {
+  margin: 0;
+}
+
+.card-body blockquote {
+  margin: 2px 0 0;
+  padding: 10px 12px;
+  border-left: 4px solid var(--pin-color);
+  background: color-mix(in srgb, var(--pin-color) 9%, white);
+  font-family: "Iowan Old Style", "Noto Serif SC", serif;
+  font-weight: 700;
+}
+
+.empty {
+  margin: 0;
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+@media (max-width: 1120px) {
+  .topbar,
+  .lens,
+  .equivalence {
+    grid-template-columns: 1fr;
+  }
+
+  .equivalence-list,
+  .cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .app {
+    padding: 16px;
+  }
+
+  h1 {
+    font-size: 3.1rem;
+  }
+
+  .controls,
+  .budget-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .count {
+    text-align: left;
+  }
+
+  .map-shell {
+    overflow-x: auto;
+  }
+
+  .money-map {
+    min-width: 920px;
+  }
+
+  .band-section,
+  .cards,
+  .equivalence-list {
+    grid-template-columns: 1fr;
+  }
+
+  .band-section h2 {
+    position: static;
+  }
+
+  .purchase-card summary {
+    grid-template-columns: 1fr auto;
+  }
+
+  .card-price,
+  .card-title {
+    grid-column: auto;
+  }
+
+  .card-meaning {
+    grid-column: 1 / -1;
+  }
+}
