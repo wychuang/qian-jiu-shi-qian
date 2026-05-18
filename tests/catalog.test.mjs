@@ -3,9 +3,11 @@ import { test } from "node:test";
 
 import {
   categoryLabels,
+  compareAtAmount,
   filterCatalog,
   getCatalog,
   getEquivalenceSet,
+  getProfiles,
   priceToPercent,
   validateCatalog
 } from "../src/catalog.mjs";
@@ -13,7 +15,7 @@ import {
 test("China catalog spans tiny choices through major purchases in ascending order", () => {
   const items = getCatalog("cn");
 
-  assert.ok(items.length >= 55);
+  assert.ok(items.length >= 110);
   assert.ok(items[0].price <= 2);
   assert.ok(items.at(-1).price >= 30000);
 
@@ -36,6 +38,65 @@ test("every purchase has a one-line meaning and expandable reflection content", 
     const errors = validateCatalog(region);
     assert.deepEqual(errors, []);
   }
+});
+
+test("China catalog contains realistic youth-culture anchors and value framing", () => {
+  const items = getCatalog("cn");
+  const ids = new Set(items.map((item) => item.id));
+
+  for (const id of [
+    "cn-genshin-648",
+    "cn-airpods-pro",
+    "cn-macbook-air",
+    "cn-iphone-main",
+    "cn-luckin-week",
+    "cn-nayuki-tea",
+    "cn-bilibili-year",
+    "cn-xiaohongshu-outfit",
+    "cn-keep-year",
+    "cn-ikea-desk"
+  ]) {
+    assert.ok(ids.has(id), `missing youth anchor ${id}`);
+  }
+
+  const genshin = items.find((item) => item.id === "cn-genshin-648");
+  assert.match(genshin.details.buys, /50/);
+  assert.match(genshin.details.question, /90|保底|小保底/);
+});
+
+test("items carry personal finance lenses rather than only price tiers", () => {
+  const items = getCatalog("cn");
+
+  for (const item of items) {
+    assert.ok(["true", "attention", "mixed"].includes(item.lens), `${item.id} has invalid lens`);
+    assert.ok(Number.isInteger(item.truthScore), `${item.id} missing truthScore`);
+    assert.ok(item.truthScore >= 1 && item.truthScore <= 5, `${item.id} truthScore out of range`);
+    assert.ok(Array.isArray(item.rewardTags), `${item.id} missing rewardTags`);
+    assert.ok(item.rewardTags.length >= 1, `${item.id} missing reward tag`);
+    assert.ok(["low", "medium", "high"].includes(item.sensitivity), `${item.id} missing sensitivity`);
+  }
+});
+
+test("profiles express different shopping lists and spending sensitivity", () => {
+  const profiles = getProfiles("cn");
+
+  assert.ok(profiles.length >= 5);
+  assert.ok(profiles.some((profile) => profile.id === "builder"));
+  assert.ok(profiles.some((profile) => profile.id === "appearance"));
+  assert.ok(profiles.every((profile) => profile.weights && profile.sensitivity));
+});
+
+test("amount comparison separates attention spend from truer alternatives", () => {
+  const comparison = compareAtAmount(getCatalog("cn"), 648, {
+    profileId: "builder",
+    sensitivity: "medium",
+    limit: 8
+  });
+
+  assert.equal(comparison.amount, 648);
+  assert.ok(comparison.attention.some((item) => item.id === "cn-genshin-648"));
+  assert.ok(comparison.trueOptions.length >= 3);
+  assert.ok(comparison.trueOptions.every((item) => item.lens !== "attention"));
 });
 
 test("filtering keeps only purchases inside the chosen budget and category", () => {

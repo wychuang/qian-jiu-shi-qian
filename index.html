@@ -7,48 +7,90 @@
     <link rel="stylesheet" href="./styles.css">
   </head>
   <body>
-    <main id="app" class="app" data-region="cn">
+    <main id="app" class="app" data-region="cn" data-sensitivity="medium">
       <header class="topbar">
         <div class="identity">
           <p class="eyebrow">Money Is Money</p>
-          <h1>钱就是钱</h1>
-          <p>把一杯咖啡、一段路、一个会员、一件家电和一段自由放回同一把尺子上。</p>
+          <h1>这笔钱，花在哪才是真的？</h1>
+          <p>同样是几百、几千块，它可以变成一次抽卡、一副耳机、一张回家的车票、一台能产出东西的电脑，或者未来的自己少一点被迫。</p>
         </div>
-
-        <div class="controls" aria-label="视图控制">
+        <div class="control-stack">
           <div class="segmented" aria-label="地区">
-            <button type="button" data-region="cn" aria-pressed="true">中国</button>
+            <button type="button" data-region="cn" aria-pressed="true">中国年轻人版</button>
             <button type="button" data-region="us" aria-pressed="false">US</button>
           </div>
           <label class="search">
-            <span>搜索</span>
-            <input id="query" type="search" autocomplete="off" placeholder="咖啡 / 关系 / buffer">
+            <span>找一个消费</span>
+            <input id="query" type="search" autocomplete="off" placeholder="648 / AirPods / 小红书 / 回家">
           </label>
-          <button id="reset" class="ghost-button" type="button">重置</button>
         </div>
       </header>
 
-      <section class="lens">
-        <div class="budget-panel">
-          <div>
-            <p>预算</p>
-            <strong id="budget-label">¥150,000</strong>
-          </div>
-          <input id="budget" type="range" min="0" max="100" step="1" value="100" aria-label="预算">
-          <div class="count"><span id="count">0</span> 项</div>
+      <section class="finance-strip" aria-label="个人消费画像">
+        <div>
+          <span>奖励画像</span>
+          <div id="profile-bar" class="profile-bar"></div>
+          <p id="profile-line"></p>
         </div>
-        <div id="category-bar" class="category-bar" aria-label="分类"></div>
+        <div>
+          <span>消费敏感度</span>
+          <div class="sensitivity">
+            <button type="button" data-sensitivity="low">不太敏感</button>
+            <button type="button" data-sensitivity="medium" aria-pressed="true">正常</button>
+            <button type="button" data-sensitivity="high">很容易被带走</button>
+          </div>
+        </div>
+        <div id="ledger" class="ledger"></div>
       </section>
 
-      <section class="map-shell" aria-label="价格地图">
-        <div id="money-map" class="money-map"></div>
-      </section>
+      <section class="workbench">
+        <aside class="amount-panel">
+          <div class="amount-copy">
+            <span>当前这笔钱</span>
+            <strong id="amount-label">¥648</strong>
+            <p id="amount-meaning">正在看：原神 648 创世结晶</p>
+          </div>
+          <div id="amount-rail" class="amount-rail">
+            <div class="rail-legend" aria-hidden="true">
+              <span>容易被带走</span>
+              <span>更可能是真的</span>
+            </div>
+            <input id="vertical-slider" class="vertical-slider" type="range" min="0" max="100" step="0.1" value="58" aria-label="金额">
+            <div class="rail-line"></div>
+            <div id="rail-marks" class="rail-marks"></div>
+          </div>
+        </aside>
 
-      <section class="equivalence-shell">
-        <aside id="equivalence" class="equivalence" aria-label="同价选择"></aside>
-      </section>
+        <section class="truth-zone">
+          <article id="focus-card" class="focus-card"></article>
 
-      <section id="item-list" class="item-list" aria-label="购买项目"></section>
+          <div class="columns">
+            <section>
+              <div class="section-head">
+                <p>同样的钱，可以更真</p>
+                <span>不是省钱，是把钱放回真正想要的地方。</span>
+              </div>
+              <div id="true-list" class="card-list"></div>
+            </section>
+
+            <section>
+              <div class="section-head danger">
+                <p>注意力容易被带走</p>
+                <span>不是不能买，而是先看清它在买什么。</span>
+              </div>
+              <div id="attention-list" class="card-list"></div>
+            </section>
+          </div>
+        </section>
+
+        <aside class="wishlist-panel">
+          <div class="section-head">
+            <p>你的奖励清单</p>
+            <span>按当前画像挑出更可能留下来的东西。</span>
+          </div>
+          <div id="wishlist" class="wishlist"></div>
+        </aside>
+      </section>
     </main>
 
     <script type="module" src="./src/app.mjs"></script>

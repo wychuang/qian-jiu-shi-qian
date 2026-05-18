@@ -1,51 +1,68 @@
 import {
-  categoryHints,
   categoryLabels,
+  compareAtAmount,
   filterCatalog,
   formatMoney,
-  getBandForPrice,
   getCatalog,
-  getEquivalenceSet,
-  priceBands,
+  getProfiles,
   priceToPercent
 } from "./catalog.mjs";
 
 const state = {
   region: "cn",
-  budgetPercent: 100,
-  categories: new Set(),
-  openId: "cn-chain-coffee",
+  profileId: "builder",
+  sensitivity: "medium",
+  amountPercent: 58,
+  selectedId: "cn-genshin-648",
   query: ""
 };
 
 const elements = {
   app: document.querySelector("#app"),
-  budget: document.querySelector("#budget"),
-  budgetLabel: document.querySelector("#budget-label"),
-  categoryBar: document.querySelector("#category-bar"),
-  count: document.querySelector("#count"),
-  equivalence: document.querySelector("#equivalence"),
-  itemList: document.querySelector("#item-list"),
-  map: document.querySelector("#money-map"),
+  amountLabel: document.querySelector("#amount-label"),
+  amountMeaning: document.querySelector("#amount-meaning"),
+  attentionList: document.querySelector("#attention-list"),
+  focusCard: document.querySelector("#focus-card"),
+  ledger: document.querySelector("#ledger"),
+  profileBar: document.querySelector("#profile-bar"),
+  profileLine: document.querySelector("#profile-line"),
   query: document.querySelector("#query"),
+  rail: document.querySelector("#amount-rail"),
+  railMarks: document.querySelector("#rail-marks"),
   regionButtons: document.querySelectorAll("[data-region]"),
-  reset: document.querySelector("#reset")
+  sensitivityButtons: document.querySelectorAll("[data-sensitivity]"),
+  trueList: document.querySelector("#true-list"),
+  verticalSlider: document.querySelector("#vertical-slider"),
+  wishlist: document.querySelector("#wishlist")
+};
+
+const presets = {
+  cn: [33, 70, 148, 198, 299, 399, 648, 899, 1299, 1899, 2999, 5999, 8499, 15000],
+  us: [5.5, 15, 35, 80, 180, 350, 700, 1400, 5000, 10000]
 };
 
 function init() {
   elements.regionButtons.forEach((button) => {
     button.addEventListener("click", () => {
       state.region = button.dataset.region;
-      state.openId = state.region === "cn" ? "cn-chain-coffee" : "us-specialty-coffee";
-      state.budgetPercent = 100;
-      state.categories.clear();
-      elements.budget.value = String(state.budgetPercent);
+      state.profileId = getProfiles(state.region)[0].id;
+      state.selectedId = state.region === "cn" ? "cn-genshin-648" : "us-specialty-coffee";
+      state.amountPercent = state.region === "cn" ? 58 : 35;
+      elements.verticalSlider.value = String(state.amountPercent);
       render();
     });
   });
 
-  elements.budget.addEventListener("input", () => {
-    state.budgetPercent = Number(elements.budget.value);
+  elements.sensitivityButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      state.sensitivity = button.dataset.sensitivity;
+      render();
+    });
+  });
+
+  elements.verticalSlider.addEventListener("input", () => {
+    state.amountPercent = Number(elements.verticalSlider.value);
+    state.selectedId = "";
     render();
   });
 
@@ -54,65 +71,61 @@ function init() {
     render();
   });
 
-  elements.reset.addEventListener("click", () => {
-    state.budgetPercent = 100;
-    state.categories.clear();
-    state.query = "";
-    elements.query.value = "";
-    elements.budget.value = "100";
-    render();
-  });
-
   render();
 }
 
 function render() {
-  const allItems = getCatalog(state.region);
-  const bounds = getBounds(allItems);
-  const budget = percentToPrice(state.budgetPercent, bounds.min, bounds.max);
-  const selectedCategories = [...state.categories];
-  const visibleItems = filterCatalog(allItems, {
-    budget,
-    categories: selectedCategories,
-    query: state.query
+  const items = getCatalog(state.region);
+  const bounds = getBounds(items);
+  const selected = items.find((item) => item.id === state.selectedId);
+  const amount = selected?.price ?? percentToPrice(state.amountPercent, bounds.min, bounds.max);
+  const comparison = compareAtAmount(items, amount, {
+    profileId: state.profileId,
+    sensitivity: state.sensitivity,
+    limit: 9
   });
+  const filtered = filterCatalog(items, { budget: bounds.max, query: state.query });
 
-  if (!visibleItems.some((item) => item.id === state.openId)) {
-    state.openId = visibleItems.at(-1)?.id ?? allItems[0].id;
-  }
-
+  state.amountPercent = priceToPercent(amount, bounds.min, bounds.max);
+  elements.verticalSlider.value = String(state.amountPercent);
   elements.app.dataset.region = state.region;
+  elements.app.dataset.sensitivity = state.sensitivity;
+
   elements.regionButtons.forEach((button) => {
     button.setAttribute("aria-pressed", String(button.dataset.region === state.region));
   });
+  elements.sensitivityButtons.forEach((button) => {
+    button.setAttribute("aria-pressed", String(button.dataset.sensitivity === state.sensitivity));
+  });
 
-  elements.budgetLabel.textContent = formatMoney(state.region, budget);
-  elements.count.textContent = String(visibleItems.length);
+  elements.amountLabel.textContent = formatMoney(state.region, amount);
+  elements.amountMeaning.textContent = selected
+    ? `正在看：${selected.title}`
+    : state.region === "cn"
+      ? "拖动金额，看这笔钱可以变成什么"
+      : "Drag the amount and compare what it can become";
 
-  renderCategoryBar(allItems);
-  renderMap(allItems, visibleItems, bounds, budget);
-  renderEquivalence(allItems, visibleItems);
-  renderItems(visibleItems);
+  renderProfiles(comparison.profile);
+  renderRail(items, bounds, amount);
+  renderFocus(selected ?? nearestItem(items, amount), amount);
+  renderCards(elements.trueList, comparison.trueOptions, "true");
+  renderCards(elements.attentionList, comparison.attention, "attention");
+  renderWishlist(filtered, comparison.profile, amount);
+  renderLedger(comparison, amount);
 }
 
-function renderCategoryBar(items) {
-  const categories = [...new Set(items.map((item) => item.category))];
-
-  elements.categoryBar.replaceChildren(
-    ...categories.map((category) => {
+function renderProfiles(activeProfile) {
+  const profiles = getProfiles(state.region);
+  elements.profileLine.textContent = activeProfile.line;
+  elements.profileBar.replaceChildren(
+    ...profiles.map((profile) => {
       const button = document.createElement("button");
-      button.className = "chip";
       button.type = "button";
-      button.textContent = categoryLabels[category];
-      button.dataset.category = category;
-      button.setAttribute("aria-pressed", String(state.categories.has(category)));
-      button.title = categoryHints[category];
+      button.className = "profile-chip";
+      button.textContent = profile.label;
+      button.setAttribute("aria-pressed", String(profile.id === activeProfile.id));
       button.addEventListener("click", () => {
-        if (state.categories.has(category)) {
-          state.categories.delete(category);
-        } else {
-          state.categories.add(category);
-        }
+        state.profileId = profile.id;
         render();
       });
       return button;
@@ -120,176 +133,193 @@ function renderCategoryBar(items) {
   );
 }
 
-function renderMap(allItems, visibleItems, bounds, budget) {
-  const visibleIds = new Set(visibleItems.map((item) => item.id));
-  const lanes = [...new Set(allItems.map((item) => item.category))];
-  const axisStops = makeAxisStops(state.region);
+function renderRail(items, bounds, amount) {
+  const chosenPresets = presets[state.region] ?? presets.cn;
+  elements.rail.style.setProperty("--amount-y", `${100 - priceToPercent(amount, bounds.min, bounds.max)}%`);
 
-  const axis = document.createElement("div");
-  axis.className = "axis";
-  axis.replaceChildren(
-    ...axisStops.map((stop) => {
-      const tick = document.createElement("span");
-      tick.className = "tick";
-      tick.style.setProperty("--x", `${priceToPercent(stop, bounds.min, bounds.max)}%`);
-      tick.textContent = formatMoney(state.region, stop);
-      return tick;
-    })
-  );
-
-  const budgetCurtain = document.createElement("div");
-  budgetCurtain.className = "budget-curtain";
-  budgetCurtain.style.setProperty("--budget-x", `${priceToPercent(budget, bounds.min, bounds.max)}%`);
-
-  const pins = allItems.map((item, index) => {
+  const marks = chosenPresets.map((value) => {
     const button = document.createElement("button");
-    button.className = "pin";
     button.type = "button";
-    button.dataset.category = item.category;
-    button.dataset.muted = String(!visibleIds.has(item.id));
-    button.dataset.active = String(item.id === state.openId);
-    button.style.setProperty("--x", `${priceToPercent(item.price, bounds.min, bounds.max)}%`);
-    button.style.setProperty("--lane", String(lanes.indexOf(item.category)));
-    button.style.setProperty("--drift", String(index % 3));
-    button.title = `${formatMoney(item)} · ${item.title}`;
-    button.innerHTML = `<span>${shortTitle(item.title)}</span>`;
+    button.className = "rail-mark";
+    button.style.setProperty("--y", `${100 - priceToPercent(value, bounds.min, bounds.max)}%`);
+    button.dataset.active = String(Math.abs(Math.log(value / amount)) < 0.08);
+    button.innerHTML = `<span>${formatMoney(state.region, value)}</span>`;
     button.addEventListener("click", () => {
-      state.openId = item.id;
-      if (item.price > budget) {
-        state.budgetPercent = priceToPercent(item.price, bounds.min, bounds.max);
-        elements.budget.value = String(state.budgetPercent);
-      }
+      state.amountPercent = priceToPercent(value, bounds.min, bounds.max);
+      const exact = items.find((item) => Math.abs(item.price - value) < 0.01);
+      state.selectedId = exact?.id ?? "";
       render();
-      document.querySelector(`[data-card-id="${item.id}"]`)?.scrollIntoView({ block: "center", behavior: "smooth" });
     });
     return button;
   });
 
-  const lanesLayer = document.createElement("div");
-  lanesLayer.className = "lanes";
-  lanesLayer.style.setProperty("--lane-count", String(lanes.length));
-  lanesLayer.replaceChildren(budgetCurtain, ...pins);
-
-  const bandLayer = document.createElement("div");
-  bandLayer.className = "band-labels";
-  bandLayer.replaceChildren(
-    ...priceBands[state.region].map((band) => {
-      const start = priceToPercent(Math.max(band.min || bounds.min, bounds.min), bounds.min, bounds.max);
-      const end = priceToPercent(Math.min(Number.isFinite(band.max) ? band.max : bounds.max, bounds.max), bounds.min, bounds.max);
-      const marker = document.createElement("span");
-      marker.style.setProperty("--x", `${start}%`);
-      marker.style.setProperty("--w", `${Math.max(4, end - start)}%`);
-      marker.textContent = band.label;
-      return marker;
-    })
-  );
-
-  elements.map.replaceChildren(axis, lanesLayer, bandLayer);
-}
-
-function renderEquivalence(allItems, visibleItems) {
-  const selected = allItems.find((item) => item.id === state.openId) ?? visibleItems.at(-1) ?? allItems[0];
-  const equivalents = getEquivalenceSet(allItems, selected.id, 4);
-  const band = getBandForPrice(state.region, selected.price);
-
-  const header = document.createElement("div");
-  header.className = "equivalence-head";
-  header.innerHTML = `
-    <p>${band.label}</p>
-    <strong>${formatMoney(selected)} · ${selected.title}</strong>
-    <span>${selected.meaning}</span>
-  `;
-
-  const list = document.createElement("div");
-  list.className = "equivalence-list";
-  list.replaceChildren(
-    ...equivalents.map((item) => {
-      const article = document.createElement("article");
-      article.className = "equivalence-item";
-      article.dataset.category = item.category;
-      article.innerHTML = `
-        <small>${categoryLabels[item.category]} · ${formatMoney(item)}</small>
-        <strong>${item.title}</strong>
-        <span>${item.meaning}</span>
-      `;
-      article.addEventListener("click", () => {
-        state.openId = item.id;
+  const itemPins = selectRailPins(items, bounds, amount)
+    .map((item) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "rail-pin";
+      button.dataset.lens = item.lens;
+      button.dataset.active = String(item.id === state.selectedId);
+      button.style.setProperty("--y", `${100 - priceToPercent(item.price, bounds.min, bounds.max)}%`);
+      button.title = `${formatMoney(item)} · ${item.title}`;
+      button.textContent = item.brand || item.title.slice(0, 5);
+      button.addEventListener("click", () => {
+        state.selectedId = item.id;
+        state.amountPercent = priceToPercent(item.price, bounds.min, bounds.max);
         render();
       });
-      return article;
-    })
-  );
+      return button;
+    });
 
-  elements.equivalence.replaceChildren(header, list);
+  elements.railMarks.replaceChildren(...marks, ...itemPins);
 }
 
-function renderItems(items) {
+function selectRailPins(items, bounds, amount) {
+  const candidates = items
+    .filter((item) => item.lens === "attention" || item.truthScore >= 5)
+    .map((item) => ({
+      item,
+      side: item.lens === "attention" ? "left" : "right",
+      y: 100 - priceToPercent(item.price, bounds.min, bounds.max),
+      score: railImportance(item, amount)
+    }))
+    .sort((left, right) => right.score - left.score);
+  const buckets = new Map();
+  const selected = [];
+
+  for (const candidate of candidates) {
+    const bucket = `${candidate.side}:${Math.round(candidate.y / 5)}`;
+    const count = buckets.get(bucket) ?? 0;
+    const isActive = candidate.item.id === state.selectedId;
+    const nearCurrent = Math.abs(Math.log(candidate.item.price / amount)) < Math.log(2.2);
+
+    if (!isActive && !nearCurrent && selected.length > 42) continue;
+    if (!isActive && count >= 2) continue;
+
+    buckets.set(bucket, count + 1);
+    selected.push(candidate.item);
+  }
+
+  return selected
+    .sort((left, right) => left.price - right.price)
+    .slice(0, 58);
+}
+
+function railImportance(item, amount) {
+  const closeness = 1 - Math.min(1, Math.abs(Math.log(item.price / amount)) / Math.log(8));
+  const active = item.id === state.selectedId ? 100 : 0;
+  const lens = item.lens === "attention" ? 3 : item.truthScore;
+  const brand = item.brand ? 0.8 : 0;
+
+  return active + closeness * 8 + lens + brand;
+}
+
+function renderFocus(item, amount) {
+  const scoreLabel = item.lens === "attention" ? "容易被带走" : item.lens === "true" ? "很可能是真的" : "要看用法";
+  const brand = item.brand ? `<span class="brand">${item.brand}</span>` : "";
+
+  elements.focusCard.innerHTML = `
+    <div class="focus-meta">
+      <span>${categoryLabels[item.category]}</span>
+      <span>${scoreLabel}</span>
+      ${brand}
+    </div>
+    <h2>${item.title}</h2>
+    <p>${item.meaning}</p>
+    <div class="focus-money">
+      <strong>${formatMoney(item)}</strong>
+      <span>和当前金额 ${formatMoney(state.region, amount)} 放在同一把尺上。</span>
+    </div>
+    <div class="truth-meter" aria-label="真实度 ${item.truthScore}/5">
+      ${Array.from({ length: 5 }, (_, index) => `<i data-on="${index < item.truthScore}"></i>`).join("")}
+    </div>
+    <blockquote>${item.details.question}</blockquote>
+  `;
+}
+
+function renderCards(container, items, mode) {
   if (items.length === 0) {
-    const empty = document.createElement("p");
-    empty.className = "empty";
-    empty.textContent = state.region === "cn" ? "这个预算和筛选下暂时没有项目。" : "No items match this lens yet.";
-    elements.itemList.replaceChildren(empty);
+    container.innerHTML = `<p class="empty">${mode === "attention" ? "这个金额附近暂时没有明显注意力消费。" : "试着把金额调高或换一个奖励画像。"}</p>`;
     return;
   }
 
-  const groups = groupByBand(items);
-  elements.itemList.replaceChildren(
-    ...groups.map((group) => {
-      const section = document.createElement("section");
-      section.className = "band-section";
-      section.innerHTML = `<h2>${group.band.label}</h2>`;
+  container.replaceChildren(...items.slice(0, 9).map(renderCard));
+}
 
-      const grid = document.createElement("div");
-      grid.className = "cards";
-      grid.replaceChildren(...group.items.map(renderCard));
+function renderCard(item) {
+  const article = document.createElement("article");
+  article.className = "money-card";
+  article.dataset.lens = item.lens;
+  article.dataset.cardId = item.id;
+  article.innerHTML = `
+    <button class="card-main" type="button">
+      <span class="card-top">
+        <span>${formatMoney(item)}</span>
+        <span>${item.brand || categoryLabels[item.category]}</span>
+      </span>
+      <strong>${item.title}</strong>
+      <span>${item.meaning}</span>
+    </button>
+    <details>
+      <summary>看清楚这笔钱</summary>
+      <p>${item.details.buys}</p>
+      <p>${item.details.swap}</p>
+      <blockquote>${item.details.question}</blockquote>
+    </details>
+  `;
 
-      section.append(grid);
-      return section;
+  article.querySelector(".card-main").addEventListener("click", () => {
+    state.selectedId = item.id;
+    render();
+  });
+
+  return article;
+}
+
+function renderWishlist(items, profile, amount) {
+  const weighted = items
+    .filter((item) => item.lens !== "attention")
+    .map((item) => ({
+      item,
+      score: item.truthScore + item.rewardTags.reduce((total, tag) => total + (profile.weights[tag] ?? 0), 0)
+    }))
+    .sort((left, right) => right.score - left.score || Math.abs(left.item.price - amount) - Math.abs(right.item.price - amount))
+    .slice(0, 12);
+
+  elements.wishlist.replaceChildren(
+    ...weighted.map(({ item }) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "wish";
+      button.innerHTML = `<span>${formatMoney(item)}</span><strong>${item.title}</strong>`;
+      button.addEventListener("click", () => {
+        state.selectedId = item.id;
+        render();
+      });
+      return button;
     })
   );
 }
 
-function renderCard(item) {
-  const details = document.createElement("details");
-  details.className = "purchase-card";
-  details.dataset.category = item.category;
-  details.dataset.cardId = item.id;
-  details.open = item.id === state.openId;
+function renderLedger(comparison, amount) {
+  const trueTotal = comparison.trueOptions.slice(0, 3).reduce((total, item) => total + item.truthScore, 0);
+  const attentionTotal = comparison.attention.slice(0, 3).reduce((total, item) => total + item.truthScore, 0);
+  const delta = Math.max(0, trueTotal - attentionTotal);
 
-  details.addEventListener("toggle", () => {
-    if (details.open) {
-      state.openId = item.id;
-      renderEquivalence(getCatalog(state.region), filterCatalog(getCatalog(state.region)));
-    }
-  });
-
-  details.innerHTML = `
-    <summary>
-      <span class="card-price">${formatMoney(item)}</span>
-      <span class="card-title">${item.title}</span>
-      <span class="card-category">${categoryLabels[item.category]}</span>
-      <span class="card-meaning">${item.meaning}</span>
-    </summary>
-    <div class="card-body">
-      <p>${item.details.buys}</p>
-      <p>${item.details.swap}</p>
-      <blockquote>${item.details.question}</blockquote>
+  elements.ledger.innerHTML = `
+    <div>
+      <span>当前金额</span>
+      <strong>${formatMoney(state.region, amount)}</strong>
+    </div>
+    <div>
+      <span>真实感差值</span>
+      <strong>+${delta}</strong>
+    </div>
+    <div>
+      <span>敏感度</span>
+      <strong>${sensitivityLabel(state.sensitivity)}</strong>
     </div>
   `;
-
-  return details;
-}
-
-function groupByBand(items) {
-  const groups = new Map();
-
-  for (const item of items) {
-    const band = getBandForPrice(state.region, item.price);
-    if (!groups.has(band.id)) groups.set(band.id, { band, items: [] });
-    groups.get(band.id).items.push(item);
-  }
-
-  return [...groups.values()];
 }
 
 function getBounds(items) {
@@ -297,6 +327,10 @@ function getBounds(items) {
     min: Math.max(0.01, items[0].price),
     max: items.at(-1).price
   };
+}
+
+function nearestItem(items, amount) {
+  return [...items].sort((left, right) => Math.abs(left.price - amount) - Math.abs(right.price - amount))[0];
 }
 
 function percentToPrice(percent, min, max) {
@@ -315,17 +349,12 @@ function nicePrice(price) {
   return Math.round(price / 1000) * 1000;
 }
 
-function makeAxisStops(region) {
-  if (region === "us") {
-    return [0.25, 1, 5, 20, 100, 500, 2000, 10000, 80000];
-  }
-
-  return [1, 5, 30, 100, 500, 2000, 10000, 50000, 150000];
-}
-
-function shortTitle(title) {
-  const compact = title.replace(/\s+/g, "");
-  return compact.length > 8 ? `${compact.slice(0, 8)}...` : compact;
+function sensitivityLabel(sensitivity) {
+  return {
+    low: "迟钝一点",
+    medium: "正常",
+    high: "很敏感"
+  }[sensitivity] ?? sensitivity;
 }
 
 init();

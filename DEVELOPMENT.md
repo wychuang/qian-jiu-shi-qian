@@ -18,9 +18,9 @@ npm test
 
 ## Files
 
-- `src/catalog.mjs`: purchase catalogs, category labels, price formatting, filters, validation, and equivalence logic.
-- `src/app.mjs`: DOM rendering and interaction state.
-- `styles.css`: responsive layout, price-map visual system, cards, and controls.
+- `src/catalog.mjs`: purchase catalogs, youth-culture anchors, personal reward profiles, true-vs-attention lenses, price formatting, filters, validation, and comparison logic.
+- `src/app.mjs`: DOM rendering, vertical amount-rail interaction, profile/sensitivity state, and comparison panels.
+- `styles.css`: responsive layout, large vertical rail visual system, finance-like controls, cards, and mobile behavior.
 - `tests/catalog.test.mjs`: data contract and pure behavior tests.
 - `scripts/dev-server.mjs`: tiny local static server for module loading.
 - `scripts/check.ps1`: syntax, tests, and browser smoke check.
@@ -29,12 +29,13 @@ npm test
 ## Content Editing Rules
 
 - Add new purchase items in `src/catalog.mjs` through the `item(...)` helper.
-- Keep every `meaning` to one visible line of intent.
+- Keep every `meaning` to one sharp visible line of intent.
 - Keep `details.buys`, `details.swap`, and `details.question` filled for every item.
-- Cross-domain equivalence works best when items near the same price have different categories.
-- Add `linkedIds` only for pairings that should be especially visible, such as coffee and cloud membership.
-- Run `npm test` after catalog edits. The validation test catches missing fields, duplicate IDs, unknown categories, and weak item shape.
+- Every item needs `lens`, `truthScore`, `rewardTags`, and `sensitivity`; defaults exist, but high-signal branded items should set them deliberately.
+- Cross-domain comparison works best when attention purchases and true options exist near the same amount.
+- Add `linkedIds` only for pairings that should be especially visible, such as 648 top-ups against chairs, therapy, travel, or tools.
+- Run `npm test` after catalog edits. The validation test catches missing fields, duplicate IDs, unknown categories, weak item shape, missing youth anchors, and missing personal-finance lenses.
 
 ## Price Notes
 
-Prices are approximate mental-model anchors. When replacing them with more exact prices, avoid turning the app into a live shopping database; the product value is comparison and reflection, not price scraping.
+Prices are approximate mental-model anchors. When replacing them with more exact prices, avoid turning the app into a live shopping database; the product value is comparison, reflection, and careful observation, not price scraping.
