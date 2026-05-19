@@ -51,3 +51,13 @@ test("data-attribute controls are scoped to buttons, not the app root", async ()
   assert.match(source, /querySelectorAll\("button\[data-mode\]"\)/);
   assert.doesNotMatch(source, /querySelectorAll\("\[data-(region|sensitivity|mode)\]"\)/);
 });
+
+test("rail current amount is a dedicated readout with reserved label space", async () => {
+  const appSource = await readFile(new URL("../src/app.mjs", import.meta.url), "utf8");
+  const styles = await readFile(new URL("../styles.css", import.meta.url), "utf8");
+
+  assert.match(appSource, /className = "rail-current"/);
+  assert.match(appSource, /currentReserveGap/);
+  assert.match(styles, /\.rail-current/);
+  assert.match(styles, /data-current-edge="top"/);
+});

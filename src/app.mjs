@@ -51,6 +51,11 @@ const presets = {
   us: [5.5, 15, 35, 80, 180, 350, 700, 1400, 5000, 10000]
 };
 
+const railMarkAnchors = {
+  cn: new Set([33, 299, 648, 2999, 15000]),
+  us: new Set([15, 80, 350, 1400, 10000])
+};
+
 function init() {
   elements.regionButtons.forEach((button) => {
     button.addEventListener("click", () => {
@@ -249,14 +254,25 @@ function renderProfiles(activeProfile) {
 
 function renderRail(items, bounds, amount) {
   const chosenPresets = presets[state.region] ?? presets.cn;
-  elements.rail.style.setProperty("--amount-y", `${100 - priceToPercent(amount, bounds.min, bounds.max)}%`);
+  const amountY = 100 - priceToPercent(amount, bounds.min, bounds.max);
+  elements.rail.style.setProperty("--amount-y", `${amountY}%`);
+  elements.rail.dataset.currentEdge = amountY < 14 ? "top" : amountY > 86 ? "bottom" : "middle";
+
+  const current = document.createElement("span");
+  current.className = "rail-current";
+  current.style.setProperty("--y", `${amountY}%`);
+  current.innerHTML = `
+    <span>${state.region === "cn" ? "当前" : "Now"}</span>
+    <strong>${formatMoney(state.region, amount)}</strong>
+  `;
 
   const marks = selectRailMarks(chosenPresets, bounds, amount).map((value) => {
+    const isActive = Math.abs(Math.log(value / amount)) < 0.08;
     const mark = document.createElement("span");
     mark.className = "rail-mark";
     mark.style.setProperty("--y", `${100 - priceToPercent(value, bounds.min, bounds.max)}%`);
-    mark.dataset.active = String(Math.abs(Math.log(value / amount)) < 0.08);
-    mark.innerHTML = `<span>${formatMoney(state.region, value)}</span>`;
+    mark.dataset.active = String(isActive);
+    mark.innerHTML = isActive ? "<span></span>" : `<span>${formatMoney(state.region, value)}</span>`;
     return mark;
   });
 
@@ -272,26 +288,32 @@ function renderRail(items, bounds, amount) {
       return pin;
     });
 
-  elements.railMarks.replaceChildren(...marks, ...itemPins);
+  elements.railMarks.replaceChildren(current, ...marks, ...itemPins);
 }
 
 function selectRailMarks(values, bounds, amount) {
-  return pickSeparatedRailPins(values.map((value, index) => {
+  const currentY = 100 - priceToPercent(amount, bounds.min, bounds.max);
+  const currentReserveGap = currentY < 14 ? 22 : currentY > 86 ? 16 : 12;
+  const candidates = values.map((value, index) => {
     const active = Math.abs(Math.log(value / amount)) < 0.08;
     const edge = index === 0 || index === values.length - 1 ? 2 : 0;
+    const anchor = railMarkAnchors[state.region]?.has(value) ? 7 : 0;
     const closeness = 1 - Math.min(1, Math.abs(Math.log(value / amount)) / Math.log(10));
 
     return {
       value,
       side: "center",
       y: 100 - priceToPercent(value, bounds.min, bounds.max),
-      score: edge + closeness * 8 + (active ? 100 : 0),
+      score: edge + anchor + closeness * 4 + (active ? 100 : 0),
       required: active
     };
-  }), {
-    maxPerSide: 10,
-    maxPins: 10,
-    minGapPercent: 5.2
+  })
+    .filter((candidate) => candidate.required || Math.abs(candidate.y - currentY) >= currentReserveGap);
+
+  return pickSeparatedRailPins(candidates, {
+    maxPerSide: 7,
+    maxPins: 7,
+    minGapPercent: 11
   })
     .map((candidate) => candidate.value)
     .sort((left, right) => left - right);
