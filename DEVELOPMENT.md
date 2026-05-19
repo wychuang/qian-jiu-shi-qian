@@ -20,7 +20,7 @@ npm test
 
 - `src/catalog.mjs`: purchase catalogs, youth-culture anchors, personal reward profiles, true-vs-attention lenses, price formatting, filters, validation, and comparison logic.
 - `src/interaction.mjs`: pure interaction helpers for mapping pointer position to rail amount.
-- `src/app.mjs`: DOM rendering, vertical amount-rail interaction, profile/sensitivity state, and comparison panels.
+- `src/app.mjs`: DOM rendering, vertical amount-rail interaction, view-mode switching, profile/sensitivity state, and comparison panels.
 - `styles.css`: responsive layout, large vertical rail visual system, finance-like controls, cards, and mobile behavior.
 - `tests/catalog.test.mjs`: data contract and pure behavior tests.
 - `scripts/dev-server.mjs`: tiny local static server for module loading.

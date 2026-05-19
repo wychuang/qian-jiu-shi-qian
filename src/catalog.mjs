@@ -1086,7 +1086,7 @@ export function filterCatalog(items, { budget = Number.POSITIVE_INFINITY, catego
     .filter((item) => selectedCategories.size === 0 || selectedCategories.has(item.category))
     .filter((item) => {
       if (!normalizedQuery) return true;
-      return [item.title, item.meaning, categoryLabels[item.category], item.details.buys, item.details.swap]
+      return [String(item.price), item.title, item.brand, item.meaning, categoryLabels[item.category], item.details.buys, item.details.swap]
         .join(" ")
         .toLowerCase()
         .includes(normalizedQuery);

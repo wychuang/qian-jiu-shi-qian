@@ -96,6 +96,7 @@ h1 {
 }
 
 .segmented,
+.mode-tabs,
 .sensitivity {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -110,7 +111,12 @@ h1 {
   grid-template-columns: repeat(3, 1fr);
 }
 
+.mode-tabs {
+  grid-template-columns: repeat(3, 1fr);
+}
+
 .segmented button,
+.mode-tabs button,
 .sensitivity button,
 .profile-chip,
 .wish {
@@ -122,6 +128,7 @@ h1 {
 }
 
 .segmented button[aria-pressed="true"],
+.mode-tabs button[aria-pressed="true"],
 .sensitivity button[aria-pressed="true"],
 .profile-chip[aria-pressed="true"] {
   color: #fff;
@@ -262,6 +269,14 @@ h1 {
   margin: 0;
   color: #34372f;
   line-height: 1.55;
+}
+
+.amount-band {
+  margin-top: 16px;
+  padding: 12px 0 0;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.94rem;
 }
 
 .amount-rail {
@@ -407,22 +422,21 @@ h1 {
 
 .rail-mark[data-active="true"] {
   border-left-color: var(--ink);
-  border-radius: 999px;
-  color: #fff;
-  background: var(--ink);
+  color: var(--ink);
+  background: transparent;
+  font-size: 0.9rem;
 }
 
 .rail-pin {
   left: calc(50% + 88px);
   width: min(190px, calc(50% - 104px));
-  min-height: 30px;
-  padding: 5px 9px;
-  border: 1px solid rgba(23, 23, 19, 0.24);
-  border-radius: 6px;
+  min-height: 28px;
+  padding: 5px 0 5px 10px;
+  border-left: 3px solid var(--money);
   overflow: hidden;
-  color: var(--ink);
-  background: #fff;
-  box-shadow: 3px 3px 0 rgba(23, 23, 19, 0.1);
+  color: var(--money);
+  background: rgba(255, 253, 247, 0.82);
+  box-shadow: none;
   font-size: 0.76rem;
   font-weight: 800;
   text-overflow: ellipsis;
@@ -432,14 +446,17 @@ h1 {
 .rail-pin[data-lens="attention"] {
   left: auto;
   right: calc(50% + 88px);
-  color: #fff;
-  background: var(--danger);
+  padding: 5px 10px 5px 0;
+  border-left: 0;
+  border-right: 3px solid var(--danger);
+  color: var(--danger);
+  background: rgba(255, 253, 247, 0.82);
   text-align: right;
 }
 
 .rail-pin[data-lens="true"] {
-  color: #fff;
-  background: var(--money);
+  color: var(--money);
+  background: rgba(255, 253, 247, 0.82);
 }
 
 .rail-pin[data-lens="mixed"] {
@@ -447,7 +464,11 @@ h1 {
 }
 
 .rail-pin[data-active="true"] {
-  outline: 3px solid var(--gold);
+  color: var(--ink);
+  border-color: var(--ink);
+  background: var(--surface);
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
 }
 
 .truth-zone {
@@ -545,6 +566,34 @@ h1 {
   background: var(--money);
 }
 
+.focus-details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.focus-details div {
+  min-height: 126px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.focus-details span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.focus-details p {
+  font-size: 0.98rem;
+  line-height: 1.62;
+}
+
 blockquote {
   margin: 0;
   padding: 14px 16px;
@@ -555,6 +604,36 @@ blockquote {
   font-size: 1.08rem;
   font-weight: 800;
   line-height: 1.6;
+}
+
+.equivalence-set {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.equivalent {
+  display: grid;
+  gap: 5px;
+  min-height: 74px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: inherit;
+  background: #fff;
+  text-align: left;
+}
+
+.equivalent span {
+  color: var(--money);
+  font-family: "Iowan Old Style", "Noto Serif SC", serif;
+  font-weight: 900;
+}
+
+.equivalent strong {
+  font-size: 0.92rem;
+  line-height: 1.35;
 }
 
 .columns {
@@ -585,22 +664,27 @@ blockquote {
 
 .money-card {
   overflow: hidden;
-  border-top: 6px solid var(--money);
+  border-left: 6px solid var(--money);
+  transition: border-color 160ms ease, transform 160ms ease;
 }
 
 .money-card[data-lens="attention"] {
-  border-top-color: var(--danger);
+  border-left-color: var(--danger);
 }
 
 .money-card[data-lens="mixed"] {
-  border-top-color: var(--gold);
+  border-left-color: var(--gold);
+}
+
+.money-card:hover {
+  transform: translateY(-1px);
 }
 
 .card-main {
   display: grid;
   gap: 10px;
   width: 100%;
-  min-height: 150px;
+  min-height: 168px;
   padding: 14px;
   border: 0;
   color: inherit;
@@ -621,30 +705,16 @@ blockquote {
   font-size: 1.12rem;
 }
 
-.card-main > span:last-child {
+.card-meaning {
   color: #3d4038;
   line-height: 1.55;
 }
 
-.money-card details {
-  padding: 0 14px 14px;
-}
-
-.money-card summary {
-  margin-bottom: 10px;
+.card-action {
+  align-self: end;
   color: var(--blue);
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.money-card p {
-  margin: 0 0 10px;
-  color: #34372f;
-  line-height: 1.62;
-}
-
-.money-card blockquote {
-  font-size: 0.96rem;
+  font-size: 0.84rem;
+  font-weight: 900;
 }
 
 .wishlist-panel {
@@ -664,7 +734,7 @@ blockquote {
 
 .wish {
   display: grid;
-  grid-template-columns: 74px 1fr;
+  grid-template-columns: 92px 1fr;
   gap: 10px;
   align-items: center;
   min-height: 54px;
@@ -693,6 +763,29 @@ blockquote {
   background: #fff;
 }
 
+.app[data-mode="axis"] .finance-strip,
+.app[data-mode="compare"] .finance-strip,
+.app[data-mode="axis"] .columns,
+.app[data-mode="axis"] .wishlist-panel,
+.app[data-mode="compare"] .wishlist-panel,
+.app[data-mode="list"] .truth-zone {
+  display: none;
+}
+
+.app[data-mode="list"] .workbench {
+  grid-template-areas: "rail wishlist";
+}
+
+.app[data-mode="list"] .wishlist-panel {
+  position: sticky;
+  top: 18px;
+}
+
+.app[data-mode="list"] .wishlist {
+  grid-template-columns: 1fr;
+  max-height: 690px;
+}
+
 @media (max-width: 1280px) {
   .finance-strip,
   .workbench,
@@ -704,6 +797,12 @@ blockquote {
     grid-template-areas:
       "rail"
       "truth"
+      "wishlist";
+  }
+
+  .app[data-mode="list"] .workbench {
+    grid-template-areas:
+      "rail"
       "wishlist";
   }
 
@@ -752,8 +851,9 @@ blockquote {
   }
 
   h1 {
-    font-size: 2.42rem;
+    font-size: 2.08rem;
     line-height: 1;
+    word-break: break-all;
   }
 
   .identity p:last-child {
@@ -763,6 +863,8 @@ blockquote {
   .topbar,
   .finance-strip,
   .columns,
+  .focus-details,
+  .equivalence-set,
   .amount-panel {
     grid-template-columns: 1fr;
   }
@@ -795,11 +897,13 @@ blockquote {
     grid-template-columns: repeat(2, 1fr);
   }
 
+  .mode-tabs,
   .sensitivity {
     grid-template-columns: repeat(3, 1fr);
   }
 
   .segmented button,
+  .mode-tabs button,
   .sensitivity button {
     min-height: 42px;
     padding: 0 6px;

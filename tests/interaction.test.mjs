@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import { test } from "node:test";
 
 import { clientYToRailPercent, pickSeparatedRailPins } from "../src/interaction.mjs";
@@ -40,4 +41,13 @@ test("rail pin picking preserves the active item before lower priority labels", 
   assert.ok(pins.some((pin) => pin.id === "active"));
   assert.ok(!pins.some((pin) => pin.id === "nearby"));
   assert.ok(pins.some((pin) => pin.id === "far"));
+});
+
+test("data-attribute controls are scoped to buttons, not the app root", async () => {
+  const source = await readFile(new URL("../src/app.mjs", import.meta.url), "utf8");
+
+  assert.match(source, /querySelectorAll\("button\[data-region\]"\)/);
+  assert.match(source, /querySelectorAll\("button\[data-sensitivity\]"\)/);
+  assert.match(source, /querySelectorAll\("button\[data-mode\]"\)/);
+  assert.doesNotMatch(source, /querySelectorAll\("\[data-(region|sensitivity|mode)\]"\)/);
 });

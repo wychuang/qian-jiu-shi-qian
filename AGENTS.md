@@ -22,6 +22,6 @@ This project lives under `F:\Projects\codex\apps\qian-jiu-shi-qian`.
 - The app should feel like a sharp, quiet cognitive instrument with a faint personal-finance dashboard feeling.
 - The core question is "what could this money become if it were spent on something truer?"
 - Prefer concrete Chinese youth brands, rituals, and scenes over generic categories.
-- Keep visible copy short; use expanded details for nuance and observation.
+- Keep visible copy short; put nuance in the single focused item view, not in expandable notes on every card.
 - Treat the large vertical amount rail as the primary interaction, not a decorative slider.
 - Preserve both China and US versions unless a task explicitly narrows scope.

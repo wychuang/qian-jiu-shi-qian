@@ -3,7 +3,9 @@ import {
   compareAtAmount,
   filterCatalog,
   formatMoney,
+  getBandForPrice,
   getCatalog,
+  getEquivalenceSet,
   getProfiles,
   priceToPercent
 } from "./catalog.mjs";
@@ -13,6 +15,7 @@ const state = {
   region: "cn",
   profileId: "builder",
   sensitivity: "medium",
+  mode: "axis",
   amountPercent: 58,
   selectedId: "cn-genshin-648",
   query: ""
@@ -24,6 +27,7 @@ let suppressNextRailClick = false;
 
 const elements = {
   app: document.querySelector("#app"),
+  amountBand: document.querySelector("#amount-band"),
   amountLabel: document.querySelector("#amount-label"),
   amountMeaning: document.querySelector("#amount-meaning"),
   attentionList: document.querySelector("#attention-list"),
@@ -34,8 +38,9 @@ const elements = {
   query: document.querySelector("#query"),
   rail: document.querySelector("#amount-rail"),
   railMarks: document.querySelector("#rail-marks"),
-  regionButtons: document.querySelectorAll("[data-region]"),
-  sensitivityButtons: document.querySelectorAll("[data-sensitivity]"),
+  modeButtons: document.querySelectorAll("button[data-mode]"),
+  regionButtons: document.querySelectorAll("button[data-region]"),
+  sensitivityButtons: document.querySelectorAll("button[data-sensitivity]"),
   trueList: document.querySelector("#true-list"),
   verticalSlider: document.querySelector("#vertical-slider"),
   wishlist: document.querySelector("#wishlist")
@@ -53,7 +58,17 @@ function init() {
       state.profileId = getProfiles(state.region)[0].id;
       state.selectedId = state.region === "cn" ? "cn-genshin-648" : "us-specialty-coffee";
       state.amountPercent = state.region === "cn" ? 58 : 35;
+      state.mode = "axis";
+      state.query = "";
+      elements.query.value = "";
       elements.verticalSlider.value = String(state.amountPercent);
+      render();
+    });
+  });
+
+  elements.modeButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      state.mode = button.dataset.mode;
       render();
     });
   });
@@ -138,6 +153,9 @@ function init() {
 
   elements.query.addEventListener("input", () => {
     state.query = elements.query.value;
+    if (state.query.trim()) {
+      state.mode = "list";
+    }
     render();
   });
 
@@ -174,14 +192,20 @@ function render() {
     limit: 9
   });
   const filtered = filterCatalog(items, { budget: bounds.max, query: state.query });
+  const focusItem = selected ?? nearestItem(items, amount);
+  const band = getBandForPrice(state.region, amount);
 
   state.amountPercent = priceToPercent(amount, bounds.min, bounds.max);
   elements.verticalSlider.value = String(state.amountPercent);
   elements.app.dataset.region = state.region;
   elements.app.dataset.sensitivity = state.sensitivity;
+  elements.app.dataset.mode = state.mode;
 
   elements.regionButtons.forEach((button) => {
     button.setAttribute("aria-pressed", String(button.dataset.region === state.region));
+  });
+  elements.modeButtons.forEach((button) => {
+    button.setAttribute("aria-pressed", String(button.dataset.mode === state.mode));
   });
   elements.sensitivityButtons.forEach((button) => {
     button.setAttribute("aria-pressed", String(button.dataset.sensitivity === state.sensitivity));
@@ -193,10 +217,11 @@ function render() {
     : state.region === "cn"
       ? "拖动金额，看这笔钱可以变成什么"
       : "Drag the amount and compare what it can become";
+  elements.amountBand.textContent = bandLine(state.region, band.id);
 
   renderProfiles(comparison.profile);
   renderRail(items, bounds, amount);
-  renderFocus(selected ?? nearestItem(items, amount), amount);
+  renderFocus(focusItem, amount, getEquivalenceSet(items, focusItem.id, 4));
   renderCards(elements.trueList, comparison.trueOptions, "true");
   renderCards(elements.attentionList, comparison.attention, "attention");
   renderWishlist(filtered, comparison.profile, amount);
@@ -226,7 +251,7 @@ function renderRail(items, bounds, amount) {
   const chosenPresets = presets[state.region] ?? presets.cn;
   elements.rail.style.setProperty("--amount-y", `${100 - priceToPercent(amount, bounds.min, bounds.max)}%`);
 
-  const marks = chosenPresets.map((value) => {
+  const marks = selectRailMarks(chosenPresets, bounds, amount).map((value) => {
     const mark = document.createElement("span");
     mark.className = "rail-mark";
     mark.style.setProperty("--y", `${100 - priceToPercent(value, bounds.min, bounds.max)}%`);
@@ -250,6 +275,28 @@ function renderRail(items, bounds, amount) {
   elements.railMarks.replaceChildren(...marks, ...itemPins);
 }
 
+function selectRailMarks(values, bounds, amount) {
+  return pickSeparatedRailPins(values.map((value, index) => {
+    const active = Math.abs(Math.log(value / amount)) < 0.08;
+    const edge = index === 0 || index === values.length - 1 ? 2 : 0;
+    const closeness = 1 - Math.min(1, Math.abs(Math.log(value / amount)) / Math.log(10));
+
+    return {
+      value,
+      side: "center",
+      y: 100 - priceToPercent(value, bounds.min, bounds.max),
+      score: edge + closeness * 8 + (active ? 100 : 0),
+      required: active
+    };
+  }), {
+    maxPerSide: 10,
+    maxPins: 10,
+    minGapPercent: 5.2
+  })
+    .map((candidate) => candidate.value)
+    .sort((left, right) => left - right);
+}
+
 function selectRailPins(items, bounds, amount) {
   const candidates = items
     .filter((item) => item.lens === "attention" || item.truthScore >= 5)
@@ -262,13 +309,13 @@ function selectRailPins(items, bounds, amount) {
     }));
 
   return pickSeparatedRailPins(candidates, {
-    maxPerSide: 8,
-    maxPins: 16,
-    minGapPercent: 7
+    maxPerSide: 6,
+    maxPins: 12,
+    minGapPercent: 8.5
   })
     .map((candidate) => candidate.item)
     .sort((left, right) => left.price - right.price)
-    .slice(0, 16);
+    .slice(0, 12);
 }
 
 function railImportance(item, amount) {
@@ -280,9 +327,15 @@ function railImportance(item, amount) {
   return active + closeness * 8 + lens + brand;
 }
 
-function renderFocus(item, amount) {
+function renderFocus(item, amount, equivalents) {
   const scoreLabel = item.lens === "attention" ? "容易被带走" : item.lens === "true" ? "很可能是真的" : "要看用法";
   const brand = item.brand ? `<span class="brand">${item.brand}</span>` : "";
+  const equivalentButtons = equivalents.map((entry) => `
+    <button class="equivalent" type="button" data-item-id="${entry.id}">
+      <span>${formatMoney(entry)}</span>
+      <strong>${entry.title}</strong>
+    </button>
+  `).join("");
 
   elements.focusCard.innerHTML = `
     <div class="focus-meta">
@@ -299,8 +352,29 @@ function renderFocus(item, amount) {
     <div class="truth-meter" aria-label="真实度 ${item.truthScore}/5">
       ${Array.from({ length: 5 }, (_, index) => `<i data-on="${index < item.truthScore}"></i>`).join("")}
     </div>
+    <div class="focus-details">
+      <div>
+        <span>买到什么</span>
+        <p>${item.details.buys}</p>
+      </div>
+      <div>
+        <span>同价位也许是</span>
+        <p>${item.details.swap}</p>
+      </div>
+    </div>
     <blockquote>${item.details.question}</blockquote>
+    ${equivalentButtons ? `
+      <div class="equivalence-set" aria-label="同价位横向对照">
+        ${equivalentButtons}
+      </div>
+    ` : ""}
   `;
+
+  elements.focusCard.querySelectorAll("[data-item-id]").forEach((button) => {
+    button.addEventListener("click", () => {
+      selectItem(button.dataset.itemId, { mode: "axis" });
+    });
+  });
 }
 
 function renderCards(container, items, mode) {
@@ -324,30 +398,28 @@ function renderCard(item) {
         <span>${item.brand || categoryLabels[item.category]}</span>
       </span>
       <strong>${item.title}</strong>
-      <span>${item.meaning}</span>
+      <span class="card-meaning">${item.meaning}</span>
+      <span class="card-action">放到价值轴上</span>
     </button>
-    <details>
-      <summary>看清楚这笔钱</summary>
-      <p>${item.details.buys}</p>
-      <p>${item.details.swap}</p>
-      <blockquote>${item.details.question}</blockquote>
-    </details>
   `;
 
   article.querySelector(".card-main").addEventListener("click", () => {
-    state.selectedId = item.id;
-    render();
+    selectItem(item.id, { mode: "axis" });
   });
 
   return article;
 }
 
 function renderWishlist(items, profile, amount) {
+  const query = state.query.trim().toLowerCase();
+  const hasQuery = query.length > 0;
   const weighted = items
-    .filter((item) => item.lens !== "attention")
+    .filter((item) => hasQuery || item.lens !== "attention")
     .map((item) => ({
       item,
-      score: item.truthScore + item.rewardTags.reduce((total, tag) => total + (profile.weights[tag] ?? 0), 0)
+      score: item.truthScore
+        + item.rewardTags.reduce((total, tag) => total + (profile.weights[tag] ?? 0), 0)
+        + queryBoost(item, query)
     }))
     .sort((left, right) => right.score - left.score || Math.abs(left.item.price - amount) - Math.abs(right.item.price - amount))
     .slice(0, 12);
@@ -359,12 +431,26 @@ function renderWishlist(items, profile, amount) {
       button.className = "wish";
       button.innerHTML = `<span>${formatMoney(item)}</span><strong>${item.title}</strong>`;
       button.addEventListener("click", () => {
-        state.selectedId = item.id;
-        render();
+        selectItem(item.id, { mode: "axis" });
       });
       return button;
     })
   );
+}
+
+function queryBoost(item, query) {
+  if (!query) return 0;
+
+  if (String(item.price).includes(query)) return 20;
+  if ([item.title, item.brand].some((text) => text.toLowerCase().includes(query))) return 12;
+  if ([item.meaning, item.details.buys, item.details.swap].some((text) => text.toLowerCase().includes(query))) return 4;
+  return 0;
+}
+
+function selectItem(itemId, { mode = state.mode } = {}) {
+  state.selectedId = itemId;
+  state.mode = mode;
+  render();
 }
 
 function renderLedger(comparison, amount) {
@@ -429,6 +515,29 @@ function sensitivityLabel(sensitivity) {
     medium: "正常",
     high: "很敏感"
   }[sensitivity] ?? sensitivity;
+}
+
+function bandLine(region, bandId) {
+  const cnLines = {
+    "loose-change": "零钱：不是小到没意义，而是小到最容易被忽略。",
+    "small-ritual": "小仪式钱：一杯咖啡、一月网盘、一次不被打断。",
+    "one-evening": "一晚钱：已经能买到一段明确的身体、关系或注意力。",
+    "one-day": "一天钱：开始能决定一个周末、一件工具、一次检查。",
+    "one-weekend": "周末钱：它可以是抽卡，也可以是回家、椅子、课程或作品。",
+    "one-tool": "工具钱：接近手机、电脑和长期能力的入口。",
+    "life-room": "余地钱：未花出去时，常常就是选择权本身。"
+  };
+  const usLines = {
+    "loose-change": "Loose change: tiny enough to disappear, real enough to steer a day.",
+    "small-ritual": "Small ritual money: coffee, storage, transit, one protected pause.",
+    "one-evening": "One evening money: a meal, a room, a ride, a focused hour.",
+    "one-day": "One day money: it starts changing tools, health, and plans.",
+    "one-weekend": "Weekend money: travel, repair, learning, or a larger buffer.",
+    "one-tool": "Tool money: phone, laptop, furniture, or capability.",
+    "life-room": "Room-to-move money: unspent, it may be freedom."
+  };
+
+  return (region === "us" ? usLines : cnLines)[bandId] ?? "";
 }
 
 init();

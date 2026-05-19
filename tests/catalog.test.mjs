@@ -33,7 +33,7 @@ test("US catalog is available with the same interaction contract", () => {
   assert.ok(items.some((item) => item.id === "us-cloud-storage-month"));
 });
 
-test("every purchase has a one-line meaning and expandable reflection content", () => {
+test("every purchase has a one-line meaning and focused reflection content", () => {
   for (const region of ["cn", "us"]) {
     const errors = validateCatalog(region);
     assert.deepEqual(errors, []);
