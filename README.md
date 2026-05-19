@@ -62,8 +62,10 @@ qian-jiu-shi-qian\
   src\
     app.mjs
     catalog.mjs
+    interaction.mjs
   tests\
     catalog.test.mjs
+    interaction.test.mjs
   scripts\
     dev-server.mjs
     check.ps1

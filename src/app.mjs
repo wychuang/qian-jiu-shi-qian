@@ -7,7 +7,7 @@ import {
   getProfiles,
   priceToPercent
 } from "./catalog.mjs";
-import { clientYToRailPercent } from "./interaction.mjs";
+import { clientYToRailPercent, pickSeparatedRailPins } from "./interaction.mjs";
 
 const state = {
   region: "cn",
@@ -227,39 +227,24 @@ function renderRail(items, bounds, amount) {
   elements.rail.style.setProperty("--amount-y", `${100 - priceToPercent(amount, bounds.min, bounds.max)}%`);
 
   const marks = chosenPresets.map((value) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "rail-mark";
-    button.style.setProperty("--y", `${100 - priceToPercent(value, bounds.min, bounds.max)}%`);
-    button.dataset.active = String(Math.abs(Math.log(value / amount)) < 0.08);
-    button.innerHTML = `<span>${formatMoney(state.region, value)}</span>`;
-    button.addEventListener("click", (event) => {
-      event.stopPropagation();
-      state.amountPercent = priceToPercent(value, bounds.min, bounds.max);
-      const exact = items.find((item) => Math.abs(item.price - value) < 0.01);
-      state.selectedId = exact?.id ?? "";
-      render();
-    });
-    return button;
+    const mark = document.createElement("span");
+    mark.className = "rail-mark";
+    mark.style.setProperty("--y", `${100 - priceToPercent(value, bounds.min, bounds.max)}%`);
+    mark.dataset.active = String(Math.abs(Math.log(value / amount)) < 0.08);
+    mark.innerHTML = `<span>${formatMoney(state.region, value)}</span>`;
+    return mark;
   });
 
   const itemPins = selectRailPins(items, bounds, amount)
     .map((item) => {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "rail-pin";
-      button.dataset.lens = item.lens;
-      button.dataset.active = String(item.id === state.selectedId);
-      button.style.setProperty("--y", `${100 - priceToPercent(item.price, bounds.min, bounds.max)}%`);
-      button.title = `${formatMoney(item)} · ${item.title}`;
-      button.textContent = item.brand || item.title.slice(0, 5);
-      button.addEventListener("click", (event) => {
-        event.stopPropagation();
-        state.selectedId = item.id;
-        state.amountPercent = priceToPercent(item.price, bounds.min, bounds.max);
-        render();
-      });
-      return button;
+      const pin = document.createElement("span");
+      pin.className = "rail-pin";
+      pin.dataset.lens = item.lens;
+      pin.dataset.active = String(item.id === state.selectedId);
+      pin.style.setProperty("--y", `${100 - priceToPercent(item.price, bounds.min, bounds.max)}%`);
+      pin.title = `${formatMoney(item)} · ${item.title}`;
+      pin.textContent = item.brand || item.title.slice(0, 5);
+      return pin;
     });
 
   elements.railMarks.replaceChildren(...marks, ...itemPins);
@@ -272,28 +257,18 @@ function selectRailPins(items, bounds, amount) {
       item,
       side: item.lens === "attention" ? "left" : "right",
       y: 100 - priceToPercent(item.price, bounds.min, bounds.max),
-      score: railImportance(item, amount)
-    }))
-    .sort((left, right) => right.score - left.score);
-  const buckets = new Map();
-  const selected = [];
+      score: railImportance(item, amount),
+      required: item.id === state.selectedId
+    }));
 
-  for (const candidate of candidates) {
-    const bucket = `${candidate.side}:${Math.round(candidate.y / 5)}`;
-    const count = buckets.get(bucket) ?? 0;
-    const isActive = candidate.item.id === state.selectedId;
-    const nearCurrent = Math.abs(Math.log(candidate.item.price / amount)) < Math.log(2.2);
-
-    if (!isActive && !nearCurrent && selected.length > 42) continue;
-    if (!isActive && count >= 2) continue;
-
-    buckets.set(bucket, count + 1);
-    selected.push(candidate.item);
-  }
-
-  return selected
+  return pickSeparatedRailPins(candidates, {
+    maxPerSide: 8,
+    maxPins: 16,
+    minGapPercent: 7
+  })
+    .map((candidate) => candidate.item)
     .sort((left, right) => left.price - right.price)
-    .slice(0, 58);
+    .slice(0, 16);
 }
 
 function railImportance(item, amount) {
@@ -428,14 +403,22 @@ function percentToPrice(percent, min, max) {
   const minLog = Math.log10(min);
   const maxLog = Math.log10(max);
   const price = 10 ** (minLog + (percent / 100) * (maxLog - minLog));
+  const preset = nearestPresetPrice(price);
 
-  return nicePrice(price);
+  return preset ?? nicePrice(price);
+}
+
+function nearestPresetPrice(price) {
+  const chosenPresets = presets[state.region] ?? [];
+
+  return chosenPresets.find((value) => Math.abs(Math.log(value / price)) < 0.018);
 }
 
 function nicePrice(price) {
   if (price < 10) return Math.round(price * 4) / 4;
   if (price < 100) return Math.round(price);
-  if (price < 1000) return Math.round(price / 10) * 10;
+  if (price < 1000) return Math.round(price);
+  if (price < 3000) return Math.round(price / 10) * 10;
   if (price < 10000) return Math.round(price / 100) * 100;
   return Math.round(price / 1000) * 1000;
 }
