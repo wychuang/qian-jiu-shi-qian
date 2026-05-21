@@ -8,6 +8,8 @@
 
 **Tech Stack:** HTML, CSS, browser ES modules, Node `node:test`, Chrome DevTools Protocol visual QA.
 
+**Course Homework:** See `docs/2026-05-21-money-truth-course-homework.md` for the full staged product-design submission.
+
 ---
 
 ### Task 1: Product Thesis And Rubric
