@@ -73,3 +73,18 @@ test("large amount readouts have a width-safe size state and semantic slider val
   assert.match(styles, /\.amount-copy strong\[data-size="xl"\]/);
   assert.match(styles, /grid-template-columns: minmax\(260px, 0\.34fr\) minmax\(500px, 1fr\)/);
 });
+
+test("amount rail encodes price bands and anchor-weighted ticks", async () => {
+  const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+  const appSource = await readFile(new URL("../src/app.mjs", import.meta.url), "utf8");
+  const styles = await readFile(new URL("../styles.css", import.meta.url), "utf8");
+
+  assert.match(html, /id="rail-bands"/);
+  assert.match(appSource, /priceBands/);
+  assert.match(appSource, /function renderRailBands/);
+  assert.match(appSource, /railBands\.replaceChildren/);
+  assert.match(appSource, /mark\.dataset\.anchor = String\(isAnchor\)/);
+  assert.match(styles, /\.rail-bands/);
+  assert.match(styles, /\.rail-band\[data-active="true"\]/);
+  assert.match(styles, /\.rail-mark\[data-anchor="true"\]/);
+});

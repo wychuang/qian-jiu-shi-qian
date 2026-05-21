@@ -7,6 +7,7 @@ import {
   getCatalog,
   getEquivalenceSet,
   getProfiles,
+  priceBands,
   priceToPercent
 } from "./catalog.mjs";
 import { clientYToRailPercent, pickSeparatedRailPins } from "./interaction.mjs";
@@ -37,6 +38,7 @@ const elements = {
   profileLine: document.querySelector("#profile-line"),
   query: document.querySelector("#query"),
   rail: document.querySelector("#amount-rail"),
+  railBands: document.querySelector("#rail-bands"),
   railMarks: document.querySelector("#rail-marks"),
   modeButtons: document.querySelectorAll("button[data-mode]"),
   regionButtons: document.querySelectorAll("button[data-region]"),
@@ -226,6 +228,7 @@ function render() {
       ? "拖动金额，看这笔钱可以变成什么"
       : "Drag the amount and compare what it can become";
   elements.amountBand.textContent = bandLine(state.region, band.id);
+  elements.rail.dataset.amountBand = band.id;
 
   renderProfiles(comparison.profile);
   renderRail(items, bounds, amount);
@@ -260,6 +263,7 @@ function renderRail(items, bounds, amount) {
   const amountY = 100 - priceToPercent(amount, bounds.min, bounds.max);
   elements.rail.style.setProperty("--amount-y", `${amountY}%`);
   elements.rail.dataset.currentEdge = amountY < 14 ? "top" : amountY > 86 ? "bottom" : "middle";
+  renderRailBands(bounds, amount);
 
   const current = document.createElement("span");
   current.className = "rail-current";
@@ -271,10 +275,12 @@ function renderRail(items, bounds, amount) {
 
   const marks = selectRailMarks(chosenPresets, bounds, amount).map((value) => {
     const isActive = Math.abs(Math.log(value / amount)) < 0.08;
+    const isAnchor = railMarkAnchors[state.region]?.has(value) ?? false;
     const mark = document.createElement("span");
     mark.className = "rail-mark";
     mark.style.setProperty("--y", `${100 - priceToPercent(value, bounds.min, bounds.max)}%`);
     mark.dataset.active = String(isActive);
+    mark.dataset.anchor = String(isAnchor);
     mark.innerHTML = isActive ? "<span></span>" : `<span>${formatMoney(state.region, value)}</span>`;
     return mark;
   });
@@ -292,6 +298,36 @@ function renderRail(items, bounds, amount) {
     });
 
   elements.railMarks.replaceChildren(current, ...marks, ...itemPins);
+}
+
+function renderRailBands(bounds, amount) {
+  const currentBand = getBandForPrice(state.region, amount);
+  const bandNodes = (priceBands[state.region] ?? priceBands.cn)
+    .map((band) => {
+      const min = Math.max(Number.isFinite(band.min) ? band.min : bounds.min, bounds.min);
+      const max = Math.min(Number.isFinite(band.max) ? band.max : bounds.max, bounds.max);
+
+      if (max <= bounds.min || min >= bounds.max || max <= min) return null;
+
+      const top = 100 - priceToPercent(max, bounds.min, bounds.max);
+      const bottom = 100 - priceToPercent(min, bounds.min, bounds.max);
+      const node = document.createElement("span");
+      const label = document.createElement("span");
+
+      node.className = "rail-band";
+      node.dataset.band = band.id;
+      node.dataset.active = String(band.id === currentBand.id);
+      node.style.setProperty("--band-top", `${top}%`);
+      node.style.setProperty("--band-height", `${Math.max(2, bottom - top)}%`);
+      label.className = "rail-band-label";
+      label.textContent = band.label;
+      node.append(label);
+
+      return node;
+    })
+    .filter(Boolean);
+
+  elements.railBands.replaceChildren(...bandNodes);
 }
 
 function selectRailMarks(values, bounds, amount) {
