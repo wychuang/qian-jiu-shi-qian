@@ -75,9 +75,9 @@
 - No source layout change expected beyond the app files above.
 
 - [x] Review `git diff --check`.
-- [ ] Commit the finished iteration.
-- [ ] Push or fast-forward `main` through the GitHub API fallback if HTTPS push fails.
-- [ ] Wait for GitHub Pages deployment and verify the live static assets.
+- [x] Commit the finished iteration.
+- [x] Push or fast-forward `main` through the GitHub API fallback if HTTPS push fails.
+- [x] Wait for GitHub Pages deployment and verify the live static assets.
 
 ### Course Self-Review
 
