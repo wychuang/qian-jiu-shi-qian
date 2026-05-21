@@ -69,7 +69,16 @@ qian-jiu-shi-qian\
   scripts\
     dev-server.mjs
     check.ps1
+  docs\
+    2026-05-21-money-truth-course-homework.md
+  knowledge-course\
+    syllabus.md
+    concept-atlas.md
+    course-index.md
+    sessions\
 ```
+
+`knowledge-course\` 是用本机 `knowledge-course` skill 生成的课程档案，用来沉淀围绕这个产品的讲课、讨论、思考、作业和综合记录；GitHub Pages 工作流不会发布这个目录。
 
 ## 内容原则
 
