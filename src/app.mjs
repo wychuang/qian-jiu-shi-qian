@@ -216,7 +216,10 @@ function render() {
     button.setAttribute("aria-pressed", String(button.dataset.sensitivity === state.sensitivity));
   });
 
-  elements.amountLabel.textContent = formatMoney(state.region, amount);
+  const formattedAmount = formatMoney(state.region, amount);
+  elements.amountLabel.textContent = formattedAmount;
+  elements.amountLabel.dataset.size = amountReadoutSize(formattedAmount);
+  elements.verticalSlider.setAttribute("aria-valuetext", formattedAmount);
   elements.amountMeaning.textContent = selected
     ? `正在看：${selected.title}`
     : state.region === "cn"
@@ -537,6 +540,14 @@ function sensitivityLabel(sensitivity) {
     medium: "正常",
     high: "很敏感"
   }[sensitivity] ?? sensitivity;
+}
+
+function amountReadoutSize(formattedAmount) {
+  const visibleLength = formattedAmount.replace(/\s/g, "").length;
+
+  if (visibleLength >= 9) return "xl";
+  if (visibleLength >= 7) return "long";
+  return "normal";
 }
 
 function bandLine(region, bandId) {

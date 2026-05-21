@@ -61,3 +61,15 @@ test("rail current amount is a dedicated readout with reserved label space", asy
   assert.match(styles, /\.rail-current/);
   assert.match(styles, /data-current-edge="top"/);
 });
+
+test("large amount readouts have a width-safe size state and semantic slider value", async () => {
+  const appSource = await readFile(new URL("../src/app.mjs", import.meta.url), "utf8");
+  const styles = await readFile(new URL("../styles.css", import.meta.url), "utf8");
+
+  assert.match(appSource, /amountLabel\.dataset\.size = amountReadoutSize\(formattedAmount\)/);
+  assert.match(appSource, /verticalSlider\.setAttribute\("aria-valuetext", formattedAmount\)/);
+  assert.match(appSource, /function amountReadoutSize/);
+  assert.match(styles, /\.amount-copy strong\[data-size="long"\]/);
+  assert.match(styles, /\.amount-copy strong\[data-size="xl"\]/);
+  assert.match(styles, /grid-template-columns: minmax\(260px, 0\.34fr\) minmax\(500px, 1fr\)/);
+});

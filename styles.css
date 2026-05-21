@@ -11,7 +11,7 @@
   --gold: #b88216;
   --blue: #174f9a;
   --violet: #6a4bb0;
-  --shadow: 0 22px 70px rgba(23, 23, 19, 0.13);
+  --shadow: 0 18px 56px rgba(23, 23, 19, 0.105);
   --font-text: "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
   --font-display: "HarmonyOS Sans SC", "MiSans", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
   --font-number: "Bahnschrift", "DIN Alternate", "Aptos Display", "Segoe UI Variable Display", "Segoe UI", sans-serif;
@@ -81,7 +81,7 @@ h1 {
   max-width: 880px;
   margin: 0;
   font-family: var(--font-display);
-  font-size: clamp(2.65rem, 4.05vw, 4.05rem);
+  font-size: clamp(2.45rem, 3.65vw, 3.68rem);
   line-height: 1.08;
   font-weight: 850;
   letter-spacing: 0;
@@ -240,7 +240,7 @@ h1 {
 
 .workbench {
   display: grid;
-  grid-template-columns: minmax(620px, 0.94fr) minmax(0, 1fr);
+  grid-template-columns: minmax(820px, 1.12fr) minmax(480px, 0.88fr);
   grid-template-areas:
     "rail truth"
     "wishlist truth";
@@ -253,14 +253,20 @@ h1 {
   position: sticky;
   top: 18px;
   display: grid;
-  grid-template-columns: minmax(190px, 0.3fr) minmax(430px, 1fr);
+  grid-template-columns: minmax(260px, 0.34fr) minmax(500px, 1fr);
   gap: 18px;
   min-height: 790px;
   padding: 18px;
-  border: 2px solid var(--line-strong);
+  border: 1px solid var(--line-strong);
   border-radius: 8px;
   background: var(--surface);
   box-shadow: var(--shadow);
+}
+
+.amount-copy {
+  position: relative;
+  z-index: 3;
+  min-width: 0;
 }
 
 .amount-copy span {
@@ -271,13 +277,23 @@ h1 {
 .amount-copy strong {
   display: block;
   margin: 8px 0;
+  max-width: 100%;
   color: var(--money);
   font-family: var(--font-number);
-  font-size: clamp(3.65rem, 6vw, 5.65rem);
+  font-size: clamp(3.3rem, 5.25vw, 5.3rem);
   font-variant-numeric: tabular-nums lining-nums;
   font-feature-settings: "tnum" 1, "lnum" 1;
   font-weight: 700;
   line-height: 0.86;
+  white-space: nowrap;
+}
+
+.amount-copy strong[data-size="long"] {
+  font-size: clamp(2.85rem, 4.45vw, 4.45rem);
+}
+
+.amount-copy strong[data-size="xl"] {
+  font-size: clamp(2.45rem, 3.85vw, 3.85rem);
 }
 
 .amount-copy p {
@@ -301,11 +317,11 @@ h1 {
   position: relative;
   isolation: isolate;
   min-height: 740px;
-  padding: 62px 0 38px;
+  padding: 64px 0 40px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background:
-    linear-gradient(90deg, rgba(201, 53, 36, 0.08), transparent 42%, transparent 58%, rgba(17, 107, 79, 0.1)),
+    linear-gradient(90deg, rgba(201, 53, 36, 0.072), transparent 38%, rgba(23, 23, 19, 0.018) 50%, transparent 62%, rgba(17, 107, 79, 0.092)),
     repeating-linear-gradient(0deg, rgba(23, 23, 19, 0.045) 0 1px, transparent 1px 38px),
     #fffdf8;
   cursor: ns-resize;
@@ -342,7 +358,7 @@ h1 {
   top: 68px;
   bottom: 46px;
   left: 50%;
-  width: 18px;
+  width: 16px;
   border: 2px solid var(--ink);
   border-radius: 999px;
   background:
@@ -357,8 +373,8 @@ h1 {
   position: absolute;
   left: 50%;
   top: var(--amount-y);
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
   border: 3px solid var(--ink);
   border-radius: 50%;
   background: var(--surface);
@@ -371,7 +387,7 @@ h1 {
   position: absolute;
   left: 50%;
   top: var(--amount-y);
-  width: min(34vw, 420px);
+  width: min(38vw, 520px);
   height: 1px;
   background: linear-gradient(90deg, var(--danger), var(--gold), var(--money));
   opacity: 0.32;
@@ -416,7 +432,7 @@ h1 {
 }
 
 .rail-mark {
-  left: calc(50% + 36px);
+  left: calc(50% + 40px);
   min-height: 28px;
   padding: 0 6px 0 8px;
   border-left: 2px solid rgba(23, 23, 19, 0.25);
@@ -507,8 +523,8 @@ h1 {
 }
 
 .rail-pin {
-  left: calc(50% + 88px);
-  width: min(190px, calc(50% - 104px));
+  left: calc(50% + 92px);
+  width: min(190px, calc(50% - 112px));
   min-height: 28px;
   padding: 5px 0 5px 10px;
   border-left: 3px solid var(--money);
@@ -525,7 +541,7 @@ h1 {
 
 .rail-pin[data-lens="attention"] {
   left: auto;
-  right: calc(50% + 88px);
+  right: calc(50% + 92px);
   padding: 5px 10px 5px 0;
   border-left: 0;
   border-right: 3px solid var(--danger);
@@ -569,7 +585,7 @@ h1 {
 .focus-card {
   min-height: 320px;
   padding: 24px;
-  border: 2px solid var(--ink);
+  border: 1px solid var(--ink);
   background:
     linear-gradient(135deg, rgba(17, 107, 79, 0.1), transparent 48%),
     var(--surface);
@@ -599,7 +615,7 @@ h1 {
 .focus-card h2 {
   margin: 18px 0 10px;
   font-family: var(--font-display);
-  font-size: clamp(2rem, 3.45vw, 3.85rem);
+  font-size: clamp(1.78rem, 2.6vw, 2.8rem);
   font-weight: 850;
   line-height: 1.12;
   text-wrap: balance;
@@ -872,6 +888,33 @@ blockquote {
   display: none;
 }
 
+@media (min-width: 1381px) {
+  .app[data-mode="compare"] .workbench {
+    grid-template-columns: minmax(650px, 0.82fr) minmax(660px, 1.18fr);
+  }
+
+  .app[data-mode="compare"] .amount-panel {
+    grid-template-columns: minmax(210px, 0.34fr) minmax(380px, 1fr);
+    min-height: 720px;
+  }
+
+  .app[data-mode="compare"] .amount-rail {
+    min-height: 670px;
+  }
+
+  .app[data-mode="compare"] .amount-copy strong {
+    font-size: clamp(2.8rem, 4.2vw, 4.5rem);
+  }
+
+  .app[data-mode="compare"] .amount-copy strong[data-size="long"] {
+    font-size: clamp(2.35rem, 3.45vw, 3.45rem);
+  }
+
+  .app[data-mode="compare"] .amount-copy strong[data-size="xl"] {
+    font-size: clamp(2.05rem, 3vw, 3rem);
+  }
+}
+
 .app[data-mode="list"] .workbench {
   grid-template-areas: "rail wishlist";
 }
@@ -886,7 +929,7 @@ blockquote {
   max-height: 690px;
 }
 
-@media (max-width: 1280px) {
+@media (max-width: 1380px) {
   .finance-strip,
   .workbench,
   .topbar {
@@ -912,7 +955,7 @@ blockquote {
   }
 
   .amount-panel {
-    grid-template-columns: minmax(200px, 280px) 1fr;
+    grid-template-columns: minmax(240px, 300px) minmax(0, 1fr);
     min-height: 680px;
   }
 
@@ -987,6 +1030,11 @@ blockquote {
 
   .amount-copy strong {
     font-size: clamp(3rem, 16vw, 4.1rem);
+  }
+
+  .amount-copy strong[data-size="long"],
+  .amount-copy strong[data-size="xl"] {
+    font-size: clamp(2.9rem, 14vw, 3.85rem);
   }
 
   .amount-copy,
